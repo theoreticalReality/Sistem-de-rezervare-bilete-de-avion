@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Editare Zbor - Portal Aeroport</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3>Editare Zbor</h3>
+        </div>
+        <div class="card-body">
+            <div th:if="${error != null and !#strings.isEmpty(error)}" class="alert alert-danger" th:text="${error}"></div>
+
+            <form th:if="${isRegular}" th:action="@{'/edit-regular-flight/' + ${currentFlightCode}}" method="post">
+                <div th:replace="~{this :: commonFields}"></div>
+                <div th:replace="~{this :: daysField}"></div>
+                <button type="submit" class="btn btn-primary">Salvează modificările</button>
+                <a th:href="@{/dashboard}" class="btn btn-secondary">Anulează</a>
+            </form>
+
+            <form th:if="${isSeasonal}" th:action="@{'/edit-seasonal-flight/' + ${currentFlightCode}}" method="post">
+                <div th:replace="~{this :: commonFields}"></div>
+                <div th:replace="~{this :: daysField}"></div>
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Început Sezon (LL-ZZ)</label>
+                        <input type="text" name="seasonStartStr" class="form-control" th:value="${seasonStartStr}" placeholder="06-01" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Sfârșit Sezon (LL-ZZ)</label>
+                        <input type="text" name="seasonEndStr" class="form-control" th:value="${seasonEndStr}" placeholder="08-31" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Salvează modificările</button>
+                <a th:href="@{/dashboard}" class="btn btn-secondary">Anulează</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="commonFields">
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label class="form-label">Cod Cursă</label>
+            <input type="text" name="flightCode" class="form-control" th:value="${flight.flightCode}" required>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Model Avion</label>
+            <input type="text" name="airplaneModel" class="form-control" th:value="${flight.airplaneModel}" required>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Ora Plecare</label>
+            <input type="time" name="departureTime" class="form-control" th:value="${departureTime}" required>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Oraș Plecare</label>
+            <input type="text" name="departureCity" class="form-control" th:value="${flight.departureCity}" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Destinație</label>
+            <input type="text" name="destinationCity" class="form-control" th:value="${flight.destinationCity}" required>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Locuri Business</label>
+            <input type="number" min="0" name="seats_BUSINESS" class="form-control" th:value="${seatsBusiness}" required>
+            <label class="form-label mt-1">Tarif Business</label>
+            <input type="number" min="0.01" step="0.01" name="prices_BUSINESS" class="form-control" th:value="${pricesBusiness}" required>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Locuri Clasa 1</label>
+            <input type="number" min="0" name="seats_FIRST" class="form-control" th:value="${seatsFirst}" required>
+            <label class="form-label mt-1">Tarif Clasa 1</label>
+            <input type="number" min="0.01" step="0.01" name="prices_FIRST" class="form-control" th:value="${pricesFirst}" required>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Locuri Economie</label>
+            <input type="number" min="0" name="seats_ECONOMY" class="form-control" th:value="${seatsEconomy}" required>
+            <label class="form-label mt-1">Tarif Economie</label>
+            <input type="number" min="0.01" step="0.01" name="prices_ECONOMY" class="form-control" th:value="${pricesEconomy}" required>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="daysField">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Zile Operare</label>
+            <select name="daysOfWeek" class="form-select" multiple required>
+                <option value="MONDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).MONDAY)}">Luni</option>
+                <option value="TUESDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).TUESDAY)}">Marți</option>
+                <option value="WEDNESDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).WEDNESDAY)}">Miercuri</option>
+                <option value="THURSDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).THURSDAY)}">Joi</option>
+                <option value="FRIDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).FRIDAY)}">Vineri</option>
+                <option value="SATURDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).SATURDAY)}">Sâmbătă</option>
+                <option value="SUNDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).SUNDAY)}">Duminică</option>
+            </select>
+        </div>
+    </div>
+</div>
+</body>
+</html>

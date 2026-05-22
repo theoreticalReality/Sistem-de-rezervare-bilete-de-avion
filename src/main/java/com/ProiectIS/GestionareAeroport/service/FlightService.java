@@ -72,6 +72,48 @@ public class FlightService {
     }
 
     @Transactional
+    public RegularFlight updateRegularFlight(Long airlineId, String currentFlightCode, CreateRegularFlightRequest req) {
+        Flight existing = findEditableFlight(airlineId, currentFlightCode);
+        if (!(existing instanceof RegularFlight flight)) {
+            throw new BadRequestException("Zborul selectat nu este un zbor regulat.");
+        }
+        validateUpdatedFlightCode(currentFlightCode, req.getFlightCode());
+        validateFlightDetails(req.getSeats(), req.getPrices());
+
+        flight.setFlightCode(req.getFlightCode());
+        flight.setAirplaneModel(req.getAirplaneModel());
+        flight.setDepartureCity(req.getDepartureCity());
+        flight.setDestinationCity(req.getDestinationCity());
+        flight.setSeats(req.getSeats());
+        flight.setPrices(req.getPrices());
+        flight.setDaysOfWeek(req.getDaysOfWeek());
+        flight.setDepartureTime(req.getDepartureTime());
+        return flightRepository.save(flight);
+    }
+
+    @Transactional
+    public SeasonalFlight updateSeasonalFlight(Long airlineId, String currentFlightCode, CreateSeasonalFlightRequest req) {
+        Flight existing = findEditableFlight(airlineId, currentFlightCode);
+        if (!(existing instanceof SeasonalFlight flight)) {
+            throw new BadRequestException("Zborul selectat nu este un zbor sezonier.");
+        }
+        validateUpdatedFlightCode(currentFlightCode, req.getFlightCode());
+        validateFlightDetails(req.getSeats(), req.getPrices());
+
+        flight.setFlightCode(req.getFlightCode());
+        flight.setAirplaneModel(req.getAirplaneModel());
+        flight.setDepartureCity(req.getDepartureCity());
+        flight.setDestinationCity(req.getDestinationCity());
+        flight.setSeats(req.getSeats());
+        flight.setPrices(req.getPrices());
+        flight.setDaysOfWeek(req.getDaysOfWeek());
+        flight.setDepartureTime(req.getDepartureTime());
+        flight.setSeasonStart(req.getSeasonStart());
+        flight.setSeasonEnd(req.getSeasonEnd());
+        return flightRepository.save(flight);
+    }
+
+    @Transactional
     public void removeFlight(Long airlineId, String flightCode) {
         Flight flight = flightRepository.findByFlightCode(flightCode)
                 .orElseThrow(() -> new NotFoundException("Zborul nu există: " + flightCode));
@@ -128,5 +170,19 @@ public class FlightService {
                 throw new BadRequestException("Tariful pentru " + classType + " trebuie să fie mai mare ca zero.");
             }
         });
+    }
+
+    private Flight findEditableFlight(Long airlineId, String flightCode) {
+        Flight flight = findByCode(flightCode);
+        if (flight.getAirline() == null || !flight.getAirline().getId().equals(airlineId)) {
+            throw new BadRequestException("Nu poți edita un zbor care nu îți aparține.");
+        }
+        return flight;
+    }
+
+    private void validateUpdatedFlightCode(String currentFlightCode, String newFlightCode) {
+        if (!currentFlightCode.equals(newFlightCode) && flightRepository.existsByFlightCode(newFlightCode)) {
+            throw new BadRequestException("Există deja un zbor cu codul: " + newFlightCode);
+        }
     }
 }

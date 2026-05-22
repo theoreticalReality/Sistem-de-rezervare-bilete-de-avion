@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Portal Aeroport</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="#">Portal Aeroport - <span th:text="${company.name}">Companie</span></a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link btn btn-outline-danger btn-sm text-white" th:href="@{/logout}">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div th:if="${error != null and !#strings.isEmpty(error)}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Zborurile mele</h2>
+        <a th:href="@{/add-flight}" class="btn btn-success">Adaugă Zbor Nou</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead class="table-light">
+                <tr>
+                    <th>Cod</th>
+                    <th>Avion</th>
+                    <th>Ruta</th>
+                    <th>Tip</th>
+                    <th>Orar</th>
+                    <th>Acțiuni</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="flight : ${flights}">
+                    <td th:text="${flight.flightCode}">COD123</td>
+                    <td th:text="${flight.airplaneModel}">Boeing</td>
+                    <td th:text="${flight.departureCity + ' -> ' + flight.destinationCity}">Plecarea -> Sosire</td>
+                    <td>
+                        <span th:if="${flight.type == 'REGULAR'}" class="badge bg-info">Regulat</span>
+                        <span th:if="${flight.type == 'SEASONAL'}" class="badge bg-warning text-dark">Sezonier</span>
+                    </td>
+                    <td>
+                        <span th:text="${flight.departureTime}">10:00</span>
+                        <div th:if="${flight.type == 'SEASONAL'}" class="small text-muted">
+                            <span th:text="${flight.seasonStart}"></span> - <span th:text="${flight.seasonEnd}"></span>
+                        </div>
+                    </td>
+                    <td>
+                        <a th:href="@{'/edit-flight/' + ${flight.flightCode}}" class="btn btn-primary btn-sm">Editează</a>
+                        <form th:action="@{'/delete-flight/' + ${flight.flightCode}}" method="post" onsubmit="return confirm('Ești sigur?')">
+                            <button type="submit" class="btn btn-danger btn-sm">Șterge</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(flights)}">
+                    <td colspan="6" class="text-center py-4">Nu există zboruri înregistrate.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

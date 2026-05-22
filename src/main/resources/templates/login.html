@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Portal Aeroport</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .login-container { max-width: 400px; margin-top: 100px; }
+    </style>
+</head>
+<body>
+<div class="container login-container">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white text-center">
+            <h3>Login Companie</h3>
+        </div>
+        <div class="card-body">
+            <div th:if="${error != null and !#strings.isEmpty(error)}" class="alert alert-danger" th:text="${error}"></div>
+            <form th:action="@{/login}" th:object="${loginRequest}" method="post">
+                <div class="mb-3">
+                    <label class="form-label">Email sau ID companie</label>
+                    <input type="text" th:field="*{email}" class="form-label form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Parolă</label>
+                    <input type="password" th:field="*{password}" class="form-label form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Autentificare</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

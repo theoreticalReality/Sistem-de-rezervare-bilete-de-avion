@@ -40,11 +40,13 @@ public class AirlineCompanyService {
     }
 
     @Transactional(readOnly = true)
-    public AirlineCompany login(String email, String password) {
-        AirlineCompany company = repository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException("Email sau parolă incorecte."));
+    public AirlineCompany login(String identifier, String password) {
+        String normalizedIdentifier = identifier == null ? "" : identifier.trim();
+        AirlineCompany company = repository.findByEmail(normalizedIdentifier)
+                .or(() -> repository.findByCompanyId(normalizedIdentifier))
+                .orElseThrow(() -> new UnauthorizedException("Email/ID companie sau parolă incorecte."));
         if (!passwordEncoder.matches(password, company.getPasswordHash())) {
-            throw new UnauthorizedException("Email sau parolă incorecte.");
+            throw new UnauthorizedException("Email/ID companie sau parolă incorecte.");
         }
         return company;
     }

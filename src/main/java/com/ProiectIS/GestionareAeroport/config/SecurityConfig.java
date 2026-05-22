@@ -25,7 +25,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/**").permitAll()
-                        .anyRequest().permitAll());
+                        .requestMatchers("/", "/login", "/logout", "/css/**", "/js/**").permitAll()
+                        .anyRequest().permitAll())
+                .formLogin(form -> form.disable())
+                .logout(logout -> logout.disable());
 
         return http.build();
     }

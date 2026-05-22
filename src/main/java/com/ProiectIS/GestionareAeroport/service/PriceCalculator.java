@@ -51,10 +51,13 @@ public class PriceCalculator {
         return price - (price * discount / 100.0);
     }
 
-    public Double calculateExtras(Double basePrice, Boolean mealIncluded, Boolean extraLuggage) {
+    public Double calculateExtras(Double discountedPrice, Integer passengerCount, Boolean mealIncluded, Boolean extraLuggage) {
         double extras = 0.0;
-        if (Boolean.TRUE.equals(mealIncluded)) extras += MEAL_FEE;
-        if (Boolean.TRUE.equals(extraLuggage)) extras += LUGGAGE_FEE;
+        double extraFee = discountedPrice * 0.05; // 5% din valoarea biletelor de bază (după discount-uri, sau înainte? cerința zice "baza")
+        
+        if (Boolean.TRUE.equals(mealIncluded)) extras += extraFee;
+        if (Boolean.TRUE.equals(extraLuggage)) extras += extraFee;
+        
         return extras;
     }
 
@@ -98,6 +101,12 @@ public class PriceCalculator {
             roundTripApplied = true;
         }
 
+        // Cerința f) cere implementarea doar a discount-ului de tur-retur.
+        // Discount-ul de last minute este definit la punctul c), dar punctul f) pare să-l restricționeze la cel de tur-retur pentru calculul final.
+        // Totuși, dacă punctul c) spune că sunt obligatorii, le lăsăm pe ambele sau doar pe cel cerut la f)?
+        // Re-citind: "Se cere implementarea doar a discount-ului de tur-retur". Voi comenta/elimina aplicarea last-minute aici.
+
+        /*
         if (outboundDeparture != null && policy.isLastMinute(outboundDeparture)) {
             discounted = applyLastMinuteDiscount(discounted, outboundDeparture);
             lastMinuteApplied = true;
@@ -105,10 +114,9 @@ public class PriceCalculator {
             discounted = applyLastMinuteDiscount(discounted, returnDeparture);
             lastMinuteApplied = true;
         }
+        */
 
-        double extras = calculateExtras(discounted, mealIncluded, extraLuggage);
-        // taxele pentru extras se înmulțesc cu numărul de pasageri
-        extras *= passengerCount;
+        double extras = calculateExtras(discounted, passengerCount, mealIncluded, extraLuggage);
 
         double total = discounted + extras;
 
