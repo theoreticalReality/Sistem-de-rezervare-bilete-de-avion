@@ -2,17 +2,21 @@ package com.ProiectIS.GestionareAeroport.service;
 
 import com.ProiectIS.GestionareAeroport.dto.CreateRegularFlightRequest;
 import com.ProiectIS.GestionareAeroport.dto.CreateSeasonalFlightRequest;
+import com.ProiectIS.GestionareAeroport.dto.FlightDto;
 import com.ProiectIS.GestionareAeroport.exception.BadRequestException;
 import com.ProiectIS.GestionareAeroport.exception.NotFoundException;
 import com.ProiectIS.GestionareAeroport.model.AirlineCompany;
 import com.ProiectIS.GestionareAeroport.model.Flight;
 import com.ProiectIS.GestionareAeroport.model.RegularFlight;
 import com.ProiectIS.GestionareAeroport.model.SeasonalFlight;
+import com.ProiectIS.GestionareAeroport.model.enums.ClassType;
 import com.ProiectIS.GestionareAeroport.repository.FlightRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class FlightService {
@@ -28,8 +32,9 @@ public class FlightService {
     @Transactional
     public RegularFlight addRegularFlight(Long airlineId, CreateRegularFlightRequest req) {
         if (flightRepository.existsByFlightCode(req.getFlightCode())) {
-            throw new BadRequestException("Există deja un zbor cu codul: " + req.getFlightCode());
+            throw new BadRequestException("Exista deja un zbor cu codul: " + req.getFlightCode());
         }
+        validateFlightDetails(req.getSeats(), req.getPrices());
         AirlineCompany airline = airlineCompanyService.findById(airlineId);
         RegularFlight flight = new RegularFlight();
         flight.setFlightCode(req.getFlightCode());
@@ -49,6 +54,7 @@ public class FlightService {
         if (flightRepository.existsByFlightCode(req.getFlightCode())) {
             throw new BadRequestException("Există deja un zbor cu codul: " + req.getFlightCode());
         }
+        validateFlightDetails(req.getSeats(), req.getPrices());
         AirlineCompany airline = airlineCompanyService.findById(airlineId);
         SeasonalFlight flight = new SeasonalFlight();
         flight.setFlightCode(req.getFlightCode());
@@ -95,5 +101,32 @@ public class FlightService {
     @Transactional(readOnly = true)
     public List<Flight> findByAirline(Long airlineId) {
         return flightRepository.findByAirline_Id(airlineId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FlightDto> findDtosByAirline(Long airlineId) {
+        return flightRepository.findByAirline_Id(airlineId).stream()
+                .map(FlightDto::fromEntity)
+                .toList();
+    }
+
+    private void validateFlightDetails(Map<ClassType, Integer> seats, Map<ClassType, Double> prices) {
+        EnumSet<ClassType> requiredClasses = EnumSet.allOf(ClassType.class);
+        if (seats == null || !seats.keySet().containsAll(requiredClasses)) {
+            throw new BadRequestException("Trebuie introdus numărul de locuri pentru BUSINESS, FIRST_CLASS și ECONOMY.");
+        }
+        if (prices == null || !prices.keySet().containsAll(requiredClasses)) {
+            throw new BadRequestException("Trebuie introduse tarifele pentru BUSINESS, FIRST_CLASS și ECONOMY.");
+        }
+        seats.forEach((classType, seatCount) -> {
+            if (seatCount == null || seatCount < 0) {
+                throw new BadRequestException("Numărul de locuri pentru " + classType + " trebuie să fie pozitiv sau zero.");
+            }
+        });
+        prices.forEach((classType, price) -> {
+            if (price == null || price <= 0) {
+                throw new BadRequestException("Tariful pentru " + classType + " trebuie să fie mai mare ca zero.");
+            }
+        });
     }
 }
