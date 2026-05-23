@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: aeroport-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: airportdb
+      MYSQL_USER: airport_user
+      MYSQL_PASSWORD: airport_pass
+      MYSQL_ROOT_PASSWORD: root_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "airport_user", "-pairport_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql-data:
