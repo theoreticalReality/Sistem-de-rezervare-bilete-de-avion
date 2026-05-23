@@ -39,4 +39,7 @@ public class CreateRegularFlightRequest {
 
     @NotNull
     private LocalTime departureTime;
+
+    @NotNull
+    private LocalTime arrivalTime;
 }

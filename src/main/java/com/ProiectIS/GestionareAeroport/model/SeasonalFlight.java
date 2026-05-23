@@ -37,6 +37,9 @@ public class SeasonalFlight extends Flight {
     @Column(name = "departure_time")
     private LocalTime departureTime;
 
+    @Column(name = "arrival_time")
+    private LocalTime arrivalTime;
+
     @Column(name = "season_start_month")
     private Integer seasonStartMonth;
 

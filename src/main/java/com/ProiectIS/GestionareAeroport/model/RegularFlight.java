@@ -36,6 +36,9 @@ public class RegularFlight extends Flight {
     @Column(name = "departure_time")
     private LocalTime departureTime;
 
+    @Column(name = "arrival_time")
+    private LocalTime arrivalTime;
+
     @Override
     public boolean isAvailableOn(LocalDate date) {
         if (date == null || daysOfWeek == null) return false;

@@ -10,6 +10,8 @@
     <div class="container">
         <a class="navbar-brand" href="#">Portal Aeroport - <span th:text="${company.name}">Companie</span></a>
         <div class="navbar-nav ms-auto">
+            <a class="nav-link text-white" th:href="@{/}">Panou principal</a>
+            <a class="nav-link text-white" th:href="@{/staff/login}">Personal aeroport</a>
             <a class="nav-link btn btn-outline-danger btn-sm text-white" th:href="@{/logout}">Logout</a>
         </div>
     </div>
@@ -47,6 +49,8 @@
                     </td>
                     <td>
                         <span th:text="${flight.departureTime}">10:00</span>
+                        <span> - </span>
+                        <span th:text="${flight.arrivalTime}">12:00</span>
                         <div th:if="${flight.type == 'SEASONAL'}" class="small text-muted">
                             <span th:text="${flight.seasonStart}"></span> - <span th:text="${flight.seasonEnd}"></span>
                         </div>

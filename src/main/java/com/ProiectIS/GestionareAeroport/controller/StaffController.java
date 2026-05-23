@@ -45,9 +45,7 @@ public class StaffController {
 
     @GetMapping("/flights/{flightCode}/bookings")
     public List<BookingResponse> getBookingsForFlight(@PathVariable String flightCode) {
-        return bookingService.findByFlightCode(flightCode).stream()
-                .map(BookingResponse::fromEntity)
-                .toList();
+        return bookingService.findResponsesByFlightCode(flightCode);
     }
 
     @PostMapping("/bookings/{bookingId}/confirm-payment")

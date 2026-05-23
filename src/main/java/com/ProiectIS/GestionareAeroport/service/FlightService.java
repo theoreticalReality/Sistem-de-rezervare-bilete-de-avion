@@ -45,6 +45,7 @@ public class FlightService {
         flight.setPrices(req.getPrices());
         flight.setDaysOfWeek(req.getDaysOfWeek());
         flight.setDepartureTime(req.getDepartureTime());
+        flight.setArrivalTime(req.getArrivalTime());
         airline.addFlight(flight);
         return flightRepository.save(flight);
     }
@@ -65,6 +66,7 @@ public class FlightService {
         flight.setPrices(req.getPrices());
         flight.setDaysOfWeek(req.getDaysOfWeek());
         flight.setDepartureTime(req.getDepartureTime());
+        flight.setArrivalTime(req.getArrivalTime());
         flight.setSeasonStart(req.getSeasonStart());
         flight.setSeasonEnd(req.getSeasonEnd());
         airline.addFlight(flight);
@@ -88,6 +90,7 @@ public class FlightService {
         flight.setPrices(req.getPrices());
         flight.setDaysOfWeek(req.getDaysOfWeek());
         flight.setDepartureTime(req.getDepartureTime());
+        flight.setArrivalTime(req.getArrivalTime());
         return flightRepository.save(flight);
     }
 
@@ -108,6 +111,7 @@ public class FlightService {
         flight.setPrices(req.getPrices());
         flight.setDaysOfWeek(req.getDaysOfWeek());
         flight.setDepartureTime(req.getDepartureTime());
+        flight.setArrivalTime(req.getArrivalTime());
         flight.setSeasonStart(req.getSeasonStart());
         flight.setSeasonEnd(req.getSeasonEnd());
         return flightRepository.save(flight);
@@ -138,6 +142,13 @@ public class FlightService {
     @Transactional(readOnly = true)
     public List<Flight> findAll() {
         return flightRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<FlightDto> findAllDtos() {
+        return flightRepository.findAll().stream()
+                .map(FlightDto::fromEntity)
+                .toList();
     }
 
     @Transactional(readOnly = true)

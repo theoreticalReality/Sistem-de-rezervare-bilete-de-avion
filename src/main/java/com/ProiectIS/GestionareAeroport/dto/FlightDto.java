@@ -38,6 +38,7 @@ public class FlightDto {
 
     private List<DayOfWeek> daysOfWeek;
     private LocalTime departureTime;
+    private LocalTime arrivalTime;
 
     @JsonFormat(pattern = "MM-dd")
     private MonthDay seasonStart;
@@ -65,12 +66,14 @@ public class FlightDto {
         if (flight instanceof RegularFlight rf) {
             b.type("REGULAR")
                     .daysOfWeek(rf.getDaysOfWeek())
-                    .departureTime(rf.getDepartureTime());
+                    .departureTime(rf.getDepartureTime())
+                    .arrivalTime(rf.getArrivalTime());
             if (forDate != null) b.departureDateTime(rf.getDepartureDateTime(forDate));
         } else if (flight instanceof SeasonalFlight sf) {
             b.type("SEASONAL")
                     .daysOfWeek(sf.getDaysOfWeek())
                     .departureTime(sf.getDepartureTime())
+                    .arrivalTime(sf.getArrivalTime())
                     .seasonStart(sf.getSeasonStart())
                     .seasonEnd(sf.getSeasonEnd());
             if (forDate != null) b.departureDateTime(sf.getDepartureDateTime(forDate));

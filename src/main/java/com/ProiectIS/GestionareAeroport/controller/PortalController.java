@@ -1,14 +1,19 @@
 package com.ProiectIS.GestionareAeroport.controller;
 
 import com.ProiectIS.GestionareAeroport.dto.AirlineLoginRequest;
+import com.ProiectIS.GestionareAeroport.dto.BookingResponse;
 import com.ProiectIS.GestionareAeroport.dto.CreateRegularFlightRequest;
 import com.ProiectIS.GestionareAeroport.dto.CreateSeasonalFlightRequest;
+import com.ProiectIS.GestionareAeroport.dto.StaffLoginRequest;
 import com.ProiectIS.GestionareAeroport.model.AirlineCompany;
+import com.ProiectIS.GestionareAeroport.model.AirportStaff;
 import com.ProiectIS.GestionareAeroport.model.Flight;
 import com.ProiectIS.GestionareAeroport.model.RegularFlight;
 import com.ProiectIS.GestionareAeroport.model.SeasonalFlight;
 import com.ProiectIS.GestionareAeroport.model.enums.ClassType;
+import com.ProiectIS.GestionareAeroport.repository.AirportStaffRepository;
 import com.ProiectIS.GestionareAeroport.service.AirlineCompanyService;
+import com.ProiectIS.GestionareAeroport.service.BookingService;
 import com.ProiectIS.GestionareAeroport.service.FlightService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -22,6 +27,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.MonthDay;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -29,15 +35,24 @@ public class PortalController {
 
     private final AirlineCompanyService airlineService;
     private final FlightService flightService;
+    private final BookingService bookingService;
+    private final AirportStaffRepository staffRepository;
 
-    public PortalController(AirlineCompanyService airlineService, FlightService flightService) {
+    public PortalController(AirlineCompanyService airlineService,
+                            FlightService flightService,
+                            BookingService bookingService,
+                            AirportStaffRepository staffRepository) {
         this.airlineService = airlineService;
         this.flightService = flightService;
+        this.bookingService = bookingService;
+        this.staffRepository = staffRepository;
     }
 
     @GetMapping("/")
-    public String index() {
-        return "redirect:/login";
+    public String index(HttpSession session, Model model) {
+        model.addAttribute("companyLoggedIn", session.getAttribute("loggedInCompany") != null);
+        model.addAttribute("staffLoggedIn", session.getAttribute("loggedInStaff") != null);
+        return "home";
     }
 
     @GetMapping("/login")
@@ -64,7 +79,69 @@ public class PortalController {
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
-        return "redirect:/login";
+        return "redirect:/";
+    }
+
+    @GetMapping("/staff/login")
+    public String staffLoginPage(Model model) {
+        model.addAttribute("loginRequest", new StaffLoginRequest());
+        return "staff-login";
+    }
+
+    @PostMapping("/staff/login")
+    public String staffLogin(@ModelAttribute StaffLoginRequest loginRequest,
+                             HttpSession session,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            AirportStaff staff = staffRepository.findByPersonalCode(loginRequest.getPersonalCode())
+                    .orElseThrow(() -> new IllegalArgumentException("Cod personal invalid."));
+            session.setAttribute("loggedInStaff", staff);
+            return "redirect:/staff/dashboard";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Cod personal invalid.");
+            return "redirect:/staff/login";
+        }
+    }
+
+    @GetMapping("/staff/dashboard")
+    public String staffDashboard(@RequestParam(required = false) String flightCode,
+                                 HttpSession session,
+                                 Model model) {
+        AirportStaff staff = (AirportStaff) session.getAttribute("loggedInStaff");
+        if (staff == null) {
+            return "redirect:/staff/login";
+        }
+
+        String normalizedFlightCode = flightCode == null ? "" : flightCode.trim();
+        model.addAttribute("staff", staff);
+        model.addAttribute("selectedFlightCode", normalizedFlightCode);
+        model.addAttribute("flights", flightService.findAllDtos());
+
+        if (!normalizedFlightCode.isBlank()) {
+            model.addAttribute("bookings", bookingService.findResponsesByFlightCode(normalizedFlightCode));
+        }
+
+        return "staff-dashboard";
+    }
+
+    @PostMapping("/staff/bookings/{bookingId}/confirm-payment")
+    public String staffConfirmCashPayment(@PathVariable String bookingId,
+                                          @RequestParam(required = false) String flightCode,
+                                          HttpSession session,
+                                          RedirectAttributes redirectAttributes) {
+        if (session.getAttribute("loggedInStaff") == null) {
+            return "redirect:/staff/login";
+        }
+
+        try {
+            bookingService.confirmCashPayment(bookingId);
+            redirectAttributes.addFlashAttribute("success", "Plata cash a fost validată.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+
+        String suffix = flightCode == null || flightCode.isBlank() ? "" : "?flightCode=" + flightCode.trim();
+        return "redirect:/staff/dashboard" + suffix;
     }
 
     @GetMapping("/dashboard")
@@ -175,9 +252,11 @@ public class PortalController {
             if (flight instanceof RegularFlight regularFlight) {
                 model.addAttribute("daysOfWeek", regularFlight.getDaysOfWeek());
                 model.addAttribute("departureTime", regularFlight.getDepartureTime());
+                model.addAttribute("arrivalTime", regularFlight.getArrivalTime());
             } else if (flight instanceof SeasonalFlight seasonalFlight) {
                 model.addAttribute("daysOfWeek", seasonalFlight.getDaysOfWeek());
                 model.addAttribute("departureTime", seasonalFlight.getDepartureTime());
+                model.addAttribute("arrivalTime", seasonalFlight.getArrivalTime());
                 model.addAttribute("seasonStartStr", formatMonthDay(seasonalFlight.getSeasonStart()));
                 model.addAttribute("seasonEndStr", formatMonthDay(seasonalFlight.getSeasonEnd()));
             }

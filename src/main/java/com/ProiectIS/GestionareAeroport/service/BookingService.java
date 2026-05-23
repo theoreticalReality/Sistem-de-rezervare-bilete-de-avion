@@ -1,6 +1,7 @@
 package com.ProiectIS.GestionareAeroport.service;
 
 import com.ProiectIS.GestionareAeroport.dto.BookingRequest;
+import com.ProiectIS.GestionareAeroport.dto.BookingResponse;
 import com.ProiectIS.GestionareAeroport.dto.PassengerDto;
 import com.ProiectIS.GestionareAeroport.exception.BadRequestException;
 import com.ProiectIS.GestionareAeroport.exception.NotFoundException;
@@ -99,6 +100,13 @@ public class BookingService {
     @Transactional(readOnly = true)
     public List<Booking> findByFlightCode(String flightCode) {
         return bookingRepository.findByOutboundFlight_FlightCodeOrReturnFlight_FlightCode(flightCode, flightCode);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingResponse> findResponsesByFlightCode(String flightCode) {
+        return bookingRepository.findByOutboundFlight_FlightCodeOrReturnFlight_FlightCode(flightCode, flightCode).stream()
+                .map(BookingResponse::fromEntity)
+                .toList();
     }
 
     @Transactional

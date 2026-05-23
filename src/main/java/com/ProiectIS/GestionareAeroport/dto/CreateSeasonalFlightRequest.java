@@ -43,6 +43,9 @@ public class CreateSeasonalFlightRequest {
     private LocalTime departureTime;
 
     @NotNull
+    private LocalTime arrivalTime;
+
+    @NotNull
     @JsonFormat(pattern = "MM-dd")
     private MonthDay seasonStart;
 
