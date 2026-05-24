@@ -140,6 +140,13 @@ public class FlightService {
     }
 
     @Transactional(readOnly = true)
+    public FlightDto findDtoById(Long id, java.time.LocalDate date) {
+        Flight flight = flightRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Zborul nu existÄƒ: " + id));
+        return FlightDto.fromEntity(flight, date);
+    }
+
+    @Transactional(readOnly = true)
     public List<Flight> findAll() {
         return flightRepository.findAll();
     }

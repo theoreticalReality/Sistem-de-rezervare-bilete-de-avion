@@ -51,9 +51,9 @@ public class PriceCalculator {
         return price - (price * discount / 100.0);
     }
 
-    public Double calculateExtras(Double discountedPrice, Integer passengerCount, Boolean mealIncluded, Boolean extraLuggage) {
+    public Double calculateExtras(Double basePrice, Integer passengerCount, Boolean mealIncluded, Boolean extraLuggage) {
         double extras = 0.0;
-        double extraFee = discountedPrice * 0.05; // 5% din valoarea biletelor de bază (după discount-uri, sau înainte? cerința zice "baza")
+        double extraFee = basePrice * 0.05;
         
         if (Boolean.TRUE.equals(mealIncluded)) extras += extraFee;
         if (Boolean.TRUE.equals(extraLuggage)) extras += extraFee;
@@ -116,7 +116,7 @@ public class PriceCalculator {
         }
         */
 
-        double extras = calculateExtras(discounted, passengerCount, mealIncluded, extraLuggage);
+        double extras = calculateExtras(basePrice, passengerCount, mealIncluded, extraLuggage);
 
         double total = discounted + extras;
 

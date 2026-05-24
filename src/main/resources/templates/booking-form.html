@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rezervare zbor - Portal Aeroport</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}">Portal Aeroport</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link text-white" th:href="@{/flights/search}">Cautare zboruri</a>
+            <a class="nav-link text-white" th:href="@{/login}">Companie</a>
+        </div>
+    </div>
+</nav>
+
+<main class="container py-4">
+    <div th:if="${error != null and !#strings.isEmpty(error)}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Date rezervare</h1>
+        <a th:href="@{/flights/search}" class="btn btn-outline-secondary btn-sm">Inapoi la cautare</a>
+    </div>
+
+    <form th:action="@{/bookings}" method="post" th:object="${bookingRequest}">
+        <input type="hidden" th:field="*{outboundFlightId}">
+        <input type="hidden" th:field="*{outboundDate}">
+        <input type="hidden" th:field="*{returnFlightId}">
+        <input type="hidden" th:field="*{returnDate}">
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <section class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h2 class="h5 mb-0">Zboruri selectate</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="fw-semibold">Tur</div>
+                            <div th:text="${outboundFlight.flightCode + ' | ' + outboundFlight.departureCity + ' -> ' + outboundFlight.destinationCity}">
+                                FL001 | Plecare -> Destinatie
+                            </div>
+                            <div class="text-muted"
+                                 th:text="${outboundFlight.departureDateTime != null ? #temporals.format(outboundFlight.departureDateTime, 'dd.MM.yyyy HH:mm') : outboundFlight.departureTime}">
+                                10:00
+                            </div>
+                        </div>
+
+                        <div th:if="${returnFlight != null}">
+                            <div class="fw-semibold">Retur</div>
+                            <div th:text="${returnFlight.flightCode + ' | ' + returnFlight.departureCity + ' -> ' + returnFlight.destinationCity}">
+                                FL002 | Destinatie -> Plecare
+                            </div>
+                            <div class="text-muted"
+                                 th:text="${returnFlight.departureDateTime != null ? #temporals.format(returnFlight.departureDateTime, 'dd.MM.yyyy HH:mm') : returnFlight.departureTime}">
+                                10:00
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h2 class="h5 mb-0">Clasa</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="border rounded p-3 mb-3" th:each="classType : ${classTypes}">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" th:field="*{selectedClass}"
+                                       th:value="${classType}" required>
+                                <label class="form-check-label fw-semibold" th:text="${classType}">ECONOMY</label>
+                            </div>
+                            <div class="row small text-muted mt-2">
+                                <div class="col-6">
+                                    Tur:
+                                    <span th:text="${outboundFlight.seats.get(classType)}">0</span> locuri,
+                                    <span th:text="${#numbers.formatDecimal(outboundFlight.prices.get(classType), 1, 2)}">0.00</span>
+                                </div>
+                                <div class="col-6" th:if="${returnFlight != null}">
+                                    Retur:
+                                    <span th:text="${returnFlight.seats.get(classType)}">0</span> locuri,
+                                    <span th:text="${#numbers.formatDecimal(returnFlight.prices.get(classType), 1, 2)}">0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-lg-7">
+                <section class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h2 class="h5 mb-0">Pasager</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <label class="form-label">Nume</label>
+                                <input type="text" class="form-control" th:field="*{passenger.name}" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">Telefon</label>
+                                <input type="text" class="form-control" th:field="*{passenger.phoneNumber}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Adulti</label>
+                                <input type="number" class="form-control" th:field="*{passenger.numberOfAdults}" min="0" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Copii</label>
+                                <input type="number" class="form-control" th:field="*{passenger.numberOfChildren}" min="0" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Seniori</label>
+                                <input type="number" class="form-control" th:field="*{passenger.numberOfSeniors}" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h2 class="h5 mb-0">Optiuni</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" th:field="*{mealIncluded}">
+                            <label class="form-check-label" th:for="${#ids.prev('mealIncluded')}">
+                                Masa inclusa (+5%)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" th:field="*{extraLuggage}">
+                            <label class="form-check-label" th:for="${#ids.prev('extraLuggage')}">
+                                Spatiu de bagaje suplimentar (+5%)
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h2 class="h5 mb-0">Plata</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-check-inline" th:each="method : ${paymentMethods}">
+                            <input class="form-check-input" type="radio" th:field="*{paymentMethod}"
+                                   th:value="${method}" required>
+                            <label class="form-check-label" th:text="${method}">CARD</label>
+                        </div>
+                    </div>
+                </section>
+
+                <button type="submit" class="btn btn-success">Finalizeaza rezervarea</button>
+            </div>
+        </div>
+    </form>
+</main>
+</body>
+</html>

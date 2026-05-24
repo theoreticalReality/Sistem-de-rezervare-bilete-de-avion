@@ -38,11 +38,27 @@ public class BookingService {
 
     @Transactional
     public Booking createBooking(BookingRequest request) {
+        int passengerCount = passengers(request.getPassenger());
+        if (passengerCount <= 0) {
+            throw new BadRequestException("Trebuie selectat cel putin un pasager.");
+        }
+        if (request.getSelectedClass() == null) {
+            throw new BadRequestException("Trebuie selectata clasa zborului.");
+        }
+        if (request.getPaymentMethod() == null) {
+            throw new BadRequestException("Trebuie selectata metoda de plata.");
+        }
+        if (request.getPassenger() == null
+                || isBlank(request.getPassenger().getName())
+                || isBlank(request.getPassenger().getPhoneNumber())) {
+            throw new BadRequestException("Numele si numarul de telefon sunt obligatorii.");
+        }
+
         Flight outbound = loadFlight(request.getOutboundFlightId());
         Flight returnFlight = request.getReturnFlightId() == null ? null
                 : loadFlight(request.getReturnFlightId());
 
-        validateFlightAvailability(outbound, request.getOutboundDate(), request.getSelectedClass(), passengers(request.getPassenger()));
+        validateFlightAvailability(outbound, request.getOutboundDate(), request.getSelectedClass(), passengerCount);
         LocalDateTime outboundDeparture = priceCalculator.resolveDeparture(outbound, request.getOutboundDate());
         if (outboundDeparture == null) {
             throw new BadRequestException("Zborul dus nu este disponibil în data selectată.");
@@ -53,7 +69,7 @@ public class BookingService {
             if (request.getReturnDate() == null) {
                 throw new BadRequestException("Lipsește data zborului de întoarcere.");
             }
-            validateFlightAvailability(returnFlight, request.getReturnDate(), request.getSelectedClass(), passengers(request.getPassenger()));
+            validateFlightAvailability(returnFlight, request.getReturnDate(), request.getSelectedClass(), passengerCount);
             returnDeparture = priceCalculator.resolveDeparture(returnFlight, request.getReturnDate());
             if (returnDeparture == null) {
                 throw new BadRequestException("Zborul de întoarcere nu este disponibil în data selectată.");
@@ -159,6 +175,10 @@ public class BookingService {
         return (dto.getNumberOfAdults() == null ? 0 : dto.getNumberOfAdults())
                 + (dto.getNumberOfChildren() == null ? 0 : dto.getNumberOfChildren())
                 + (dto.getNumberOfSeniors() == null ? 0 : dto.getNumberOfSeniors());
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 
     private String generateBookingId() {

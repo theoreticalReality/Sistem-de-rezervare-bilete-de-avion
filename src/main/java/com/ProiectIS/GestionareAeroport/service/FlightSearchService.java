@@ -24,8 +24,18 @@ public class FlightSearchService {
 
     @Transactional(readOnly = true)
     public SearchResult search(SearchQuery query) {
+        if (query == null) {
+            throw new BadRequestException("Criteriile de cautare sunt obligatorii.");
+        }
+        if (isBlank(query.getDepartureCity()) || isBlank(query.getDestinationCity())) {
+            throw new BadRequestException("Locul de plecare si destinatia sunt obligatorii.");
+        }
         if (query.getDepartureDate() == null) {
             throw new BadRequestException("Data plecării este obligatorie.");
+        }
+
+        if (query.getNumberOfPassengers() == null || query.getNumberOfPassengers() <= 0) {
+            throw new BadRequestException("Numarul de persoane trebuie sa fie cel putin 1.");
         }
 
         List<FlightDto> outbound = findMatchingFlights(
@@ -68,5 +78,9 @@ public class FlightSearchService {
         if (passengerCount == null || passengerCount <= 0) return true;
         return flight.getSeats().values().stream()
                 .anyMatch(s -> s != null && s >= passengerCount);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

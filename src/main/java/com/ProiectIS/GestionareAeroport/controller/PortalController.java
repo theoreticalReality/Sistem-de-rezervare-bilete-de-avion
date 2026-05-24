@@ -1,21 +1,29 @@
 package com.ProiectIS.GestionareAeroport.controller;
 
 import com.ProiectIS.GestionareAeroport.dto.AirlineLoginRequest;
+import com.ProiectIS.GestionareAeroport.dto.BookingRequest;
 import com.ProiectIS.GestionareAeroport.dto.BookingResponse;
 import com.ProiectIS.GestionareAeroport.dto.CreateRegularFlightRequest;
 import com.ProiectIS.GestionareAeroport.dto.CreateSeasonalFlightRequest;
+import com.ProiectIS.GestionareAeroport.dto.PassengerDto;
+import com.ProiectIS.GestionareAeroport.dto.SearchQuery;
+import com.ProiectIS.GestionareAeroport.dto.SearchResult;
 import com.ProiectIS.GestionareAeroport.dto.StaffLoginRequest;
 import com.ProiectIS.GestionareAeroport.model.AirlineCompany;
 import com.ProiectIS.GestionareAeroport.model.AirportStaff;
+import com.ProiectIS.GestionareAeroport.model.Booking;
 import com.ProiectIS.GestionareAeroport.model.Flight;
 import com.ProiectIS.GestionareAeroport.model.RegularFlight;
 import com.ProiectIS.GestionareAeroport.model.SeasonalFlight;
 import com.ProiectIS.GestionareAeroport.model.enums.ClassType;
+import com.ProiectIS.GestionareAeroport.model.enums.PaymentMethod;
 import com.ProiectIS.GestionareAeroport.repository.AirportStaffRepository;
 import com.ProiectIS.GestionareAeroport.service.AirlineCompanyService;
 import com.ProiectIS.GestionareAeroport.service.BookingService;
+import com.ProiectIS.GestionareAeroport.service.FlightSearchService;
 import com.ProiectIS.GestionareAeroport.service.FlightService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +33,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.time.MonthDay;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -35,15 +43,18 @@ public class PortalController {
 
     private final AirlineCompanyService airlineService;
     private final FlightService flightService;
+    private final FlightSearchService flightSearchService;
     private final BookingService bookingService;
     private final AirportStaffRepository staffRepository;
 
     public PortalController(AirlineCompanyService airlineService,
                             FlightService flightService,
+                            FlightSearchService flightSearchService,
                             BookingService bookingService,
                             AirportStaffRepository staffRepository) {
         this.airlineService = airlineService;
         this.flightService = flightService;
+        this.flightSearchService = flightSearchService;
         this.bookingService = bookingService;
         this.staffRepository = staffRepository;
     }
@@ -53,6 +64,76 @@ public class PortalController {
         model.addAttribute("companyLoggedIn", session.getAttribute("loggedInCompany") != null);
         model.addAttribute("staffLoggedIn", session.getAttribute("loggedInStaff") != null);
         return "home";
+    }
+
+    @GetMapping("/flights/search")
+    public String passengerSearch(@ModelAttribute("query") SearchQuery query,
+                                  @RequestParam(defaultValue = "false") boolean searched,
+                                  Model model) {
+        if (query.getNumberOfPassengers() == null) {
+            query.setNumberOfPassengers(1);
+        }
+        if (query.getWantsReturn() == null) {
+            query.setWantsReturn(false);
+        }
+
+        model.addAttribute("searched", searched);
+        if (searched) {
+            try {
+                SearchResult result = flightSearchService.search(query);
+                model.addAttribute("result", result);
+            } catch (Exception e) {
+                model.addAttribute("error", e.getMessage());
+            }
+        }
+
+        return "flight-search";
+    }
+
+    @GetMapping("/bookings/new")
+    public String newBooking(@RequestParam Long outboundFlightId,
+                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate outboundDate,
+                             @RequestParam(required = false) Long returnFlightId,
+                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate returnDate,
+                             @RequestParam(required = false) Integer passengerCount,
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            BookingRequest request = new BookingRequest();
+            request.setOutboundFlightId(outboundFlightId);
+            request.setOutboundDate(outboundDate);
+            request.setReturnFlightId(returnFlightId);
+            request.setReturnDate(returnDate);
+            request.setSelectedClass(ClassType.ECONOMY);
+            request.setPaymentMethod(PaymentMethod.CARD);
+
+            PassengerDto passenger = new PassengerDto();
+            passenger.setNumberOfAdults(passengerCount == null || passengerCount <= 0 ? 1 : passengerCount);
+            passenger.setNumberOfChildren(0);
+            passenger.setNumberOfSeniors(0);
+            request.setPassenger(passenger);
+
+            model.addAttribute("bookingRequest", request);
+            addBookingFormAttributes(model, request);
+            return "booking-form";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/flights/search";
+        }
+    }
+
+    @PostMapping("/bookings")
+    public String createPublicBooking(@ModelAttribute("bookingRequest") BookingRequest request,
+                                      Model model) {
+        try {
+            Booking booking = bookingService.createBooking(request);
+            model.addAttribute("booking", BookingResponse.fromEntity(booking));
+            return "booking-confirmation";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            addBookingFormAttributes(model, request);
+            return "booking-form";
+        }
     }
 
     @GetMapping("/login")
@@ -354,6 +435,14 @@ public class PortalController {
         model.addAttribute("pricesBusiness", flight.getPrices().get(ClassType.BUSINESS));
         model.addAttribute("pricesFirst", flight.getPrices().get(ClassType.FIRST_CLASS));
         model.addAttribute("pricesEconomy", flight.getPrices().get(ClassType.ECONOMY));
+    }
+
+    private void addBookingFormAttributes(Model model, BookingRequest request) {
+        model.addAttribute("outboundFlight", flightService.findDtoById(request.getOutboundFlightId(), request.getOutboundDate()));
+        model.addAttribute("returnFlight", request.getReturnFlightId() == null ? null
+                : flightService.findDtoById(request.getReturnFlightId(), request.getReturnDate()));
+        model.addAttribute("classTypes", ClassType.values());
+        model.addAttribute("paymentMethods", PaymentMethod.values());
     }
 
     private String formatMonthDay(MonthDay monthDay) {

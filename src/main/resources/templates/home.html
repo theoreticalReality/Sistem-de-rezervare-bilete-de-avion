@@ -10,6 +10,7 @@
     <div class="container">
         <a class="navbar-brand" th:href="@{/}">Portal Aeroport</a>
         <div class="navbar-nav ms-auto">
+            <a class="nav-link" th:href="@{/flights/search}">Pasageri</a>
             <a class="nav-link" th:href="@{/login}">Companie</a>
             <a class="nav-link" th:href="@{/staff/login}">Personal aeroport</a>
             <a th:if="${companyLoggedIn or staffLoggedIn}" class="nav-link text-danger" th:href="@{/logout}">Logout</a>
@@ -24,7 +25,19 @@
     </div>
 
     <div class="row g-4">
-        <div class="col-md-6">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h4">Pasageri</h2>
+                    <p class="text-muted">Cautare zboruri si rezervare bilete fara cont.</p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a th:href="@{/flights/search}" class="btn btn-success">Cauta zboruri</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h2 class="h4">Companie aeriană</h2>
@@ -37,7 +50,7 @@
             </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h2 class="h4">Personal aeroport</h2>
