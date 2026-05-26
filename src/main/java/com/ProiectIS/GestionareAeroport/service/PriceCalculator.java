@@ -16,13 +16,13 @@ import java.time.LocalDateTime;
 @Service
 public class PriceCalculator {
 
-    public static final double MEAL_FEE = 25.0;
-    public static final double LUGGAGE_FEE = 35.0;
-
     private final DiscountPolicyService discountPolicyService;
+    private final OptionalServicesCalculator optionalServicesCalculator;
 
-    public PriceCalculator(DiscountPolicyService discountPolicyService) {
+    public PriceCalculator(DiscountPolicyService discountPolicyService,
+                           OptionalServicesCalculator optionalServicesCalculator) {
         this.discountPolicyService = discountPolicyService;
+        this.optionalServicesCalculator = optionalServicesCalculator;
     }
 
     public Double calculateTicketPrice(Flight flight, ClassType classType, Integer passengerCount) {
@@ -51,14 +51,8 @@ public class PriceCalculator {
         return price - (price * discount / 100.0);
     }
 
-    public Double calculateExtras(Double basePrice, Integer passengerCount, Boolean mealIncluded, Boolean extraLuggage) {
-        double extras = 0.0;
-        double extraFee = basePrice * 0.05;
-        
-        if (Boolean.TRUE.equals(mealIncluded)) extras += extraFee;
-        if (Boolean.TRUE.equals(extraLuggage)) extras += extraFee;
-        
-        return extras;
+    public Double calculateExtras(Double basePrice, Boolean mealIncluded, Boolean extraLuggage) {
+        return optionalServicesCalculator.calculateOptionalServicesPrice(basePrice, mealIncluded, extraLuggage);
     }
 
     public Double calculateTotal(Booking booking) {
@@ -116,7 +110,7 @@ public class PriceCalculator {
         }
         */
 
-        double extras = calculateExtras(basePrice, passengerCount, mealIncluded, extraLuggage);
+        double extras = calculateExtras(basePrice, mealIncluded, extraLuggage);
 
         double total = discounted + extras;
 
