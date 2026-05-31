@@ -67,7 +67,26 @@
                           th:text="${booking.paymentStatus}">CONFIRMED</span>
                 </dd>
 
-                <dt class="col-sm-4">Total</dt>
+                <dt class="col-sm-4">Pret bilete</dt>
+                <dd class="col-sm-8">
+                    <span th:text="${#numbers.formatDecimal(booking.basePrice, 1, 2)}">0.00</span>
+                </dd>
+
+                <dt class="col-sm-4">Optiuni suplimentare</dt>
+                <dd class="col-sm-8">
+                    <span th:text="${#numbers.formatDecimal(booking.extrasPrice, 1, 2)}">0.00</span>
+                </dd>
+
+                <dt class="col-sm-4">Discount tur-retur</dt>
+                <dd class="col-sm-8">
+                    <span th:if="${booking.roundTripDiscountApplied}">
+                        -
+                        <span th:text="${#numbers.formatDecimal(booking.discountAmount, 1, 2)}">0.00</span>
+                    </span>
+                    <span th:unless="${booking.roundTripDiscountApplied}" class="text-muted">Nu se aplica</span>
+                </dd>
+
+                <dt class="col-sm-4">Total de plata</dt>
                 <dd class="col-sm-8 fw-semibold">
                     <span th:text="${#numbers.formatDecimal(booking.totalPrice, 1, 2)}">0.00</span>
                 </dd>

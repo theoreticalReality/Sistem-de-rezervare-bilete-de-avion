@@ -37,6 +37,10 @@ public class BookingResponse {
     private PaymentStatus paymentStatus;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime bookingDate;
+    private Double basePrice;
+    private Double extrasPrice;
+    private Double discountAmount;
+    private Boolean roundTripDiscountApplied;
     private Double totalPrice;
 
     public static BookingResponse fromEntity(Booking b) {
@@ -55,7 +59,15 @@ public class BookingResponse {
                 .paymentMethod(b.getPaymentMethod())
                 .paymentStatus(b.getPaymentStatus())
                 .bookingDate(b.getBookingDate())
+                .basePrice(amountOrZero(b.getBasePrice()))
+                .extrasPrice(amountOrZero(b.getExtrasPrice()))
+                .discountAmount(amountOrZero(b.getDiscountAmount()))
+                .roundTripDiscountApplied(Boolean.TRUE.equals(b.getRoundTripDiscountApplied()))
                 .totalPrice(b.getTotalPrice())
                 .build();
+    }
+
+    private static Double amountOrZero(Double value) {
+        return value == null ? 0.0 : value;
     }
 }

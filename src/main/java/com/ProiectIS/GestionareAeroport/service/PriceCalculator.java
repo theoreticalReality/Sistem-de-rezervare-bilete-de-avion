@@ -76,8 +76,6 @@ public class PriceCalculator {
                             LocalDateTime outboundDeparture, LocalDateTime returnDeparture,
                             ClassType classType, Integer passengerCount,
                             Boolean mealIncluded, Boolean extraLuggage) {
-        DiscountPolicy policy = discountPolicyService.getPolicy();
-
         double outboundPrice = calculateTicketPrice(outbound, classType, passengerCount);
         double returnPrice = 0.0;
         if (returnFlight != null) {
@@ -95,20 +93,7 @@ public class PriceCalculator {
             roundTripApplied = true;
         }
 
-        // Cerința f) cere implementarea doar a discount-ului de tur-retur.
-        // Discount-ul de last minute este definit la punctul c), dar punctul f) pare să-l restricționeze la cel de tur-retur pentru calculul final.
-        // Totuși, dacă punctul c) spune că sunt obligatorii, le lăsăm pe ambele sau doar pe cel cerut la f)?
-        // Re-citind: "Se cere implementarea doar a discount-ului de tur-retur". Voi comenta/elimina aplicarea last-minute aici.
-
-        /*
-        if (outboundDeparture != null && policy.isLastMinute(outboundDeparture)) {
-            discounted = applyLastMinuteDiscount(discounted, outboundDeparture);
-            lastMinuteApplied = true;
-        } else if (returnDeparture != null && policy.isLastMinute(returnDeparture)) {
-            discounted = applyLastMinuteDiscount(discounted, returnDeparture);
-            lastMinuteApplied = true;
-        }
-        */
+        // Cerinta cere doar discount pentru tur-retur in calculul final.
 
         double extras = calculateExtras(basePrice, mealIncluded, extraLuggage);
 

@@ -70,6 +70,18 @@ public class Booking {
     @Column(name = "total_price", nullable = false)
     private Double totalPrice;
 
+    @Column(name = "base_price")
+    private Double basePrice = 0.0;
+
+    @Column(name = "extras_price")
+    private Double extrasPrice = 0.0;
+
+    @Column(name = "discount_amount")
+    private Double discountAmount = 0.0;
+
+    @Column(name = "round_trip_discount_applied")
+    private Boolean roundTripDiscountApplied = false;
+
     @Column(name = "outbound_departure")
     private LocalDateTime outboundDeparture;
 

@@ -3,6 +3,7 @@ package com.ProiectIS.GestionareAeroport.service;
 import com.ProiectIS.GestionareAeroport.dto.BookingRequest;
 import com.ProiectIS.GestionareAeroport.dto.BookingResponse;
 import com.ProiectIS.GestionareAeroport.dto.PassengerDto;
+import com.ProiectIS.GestionareAeroport.dto.PriceQuote;
 import com.ProiectIS.GestionareAeroport.exception.BadRequestException;
 import com.ProiectIS.GestionareAeroport.exception.NotFoundException;
 import com.ProiectIS.GestionareAeroport.model.Booking;
@@ -91,8 +92,21 @@ public class BookingService {
         booking.setOutboundDeparture(outboundDeparture);
         booking.setReturnDeparture(returnDeparture);
 
-        Double total = priceCalculator.calculateTotal(booking);
-        booking.setTotalPrice(total);
+        PriceQuote quote = priceCalculator.quote(
+                outbound,
+                returnFlight,
+                outboundDeparture,
+                returnDeparture,
+                request.getSelectedClass(),
+                booking.getPassenger().getTotalPassengerCount(),
+                booking.getMealIncluded(),
+                booking.getExtraLuggage()
+        );
+        booking.setBasePrice(quote.getBasePrice());
+        booking.setExtrasPrice(quote.getExtrasPrice());
+        booking.setDiscountAmount(quote.getDiscountAmount());
+        booking.setRoundTripDiscountApplied(quote.isRoundTripDiscountApplied());
+        booking.setTotalPrice(quote.getTotalPrice());
 
         decrementSeats(outbound, request.getSelectedClass(), booking.getPassenger().getTotalPassengerCount());
         if (returnFlight != null) {
