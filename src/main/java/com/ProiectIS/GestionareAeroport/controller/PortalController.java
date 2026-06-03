@@ -12,6 +12,7 @@ import com.ProiectIS.GestionareAeroport.dto.StaffLoginRequest;
 import com.ProiectIS.GestionareAeroport.model.AirlineCompany;
 import com.ProiectIS.GestionareAeroport.model.AirportStaff;
 import com.ProiectIS.GestionareAeroport.model.Booking;
+import com.ProiectIS.GestionareAeroport.model.DiscountPolicy;
 import com.ProiectIS.GestionareAeroport.model.Flight;
 import com.ProiectIS.GestionareAeroport.model.RegularFlight;
 import com.ProiectIS.GestionareAeroport.model.SeasonalFlight;
@@ -20,6 +21,7 @@ import com.ProiectIS.GestionareAeroport.model.enums.PaymentMethod;
 import com.ProiectIS.GestionareAeroport.repository.AirportStaffRepository;
 import com.ProiectIS.GestionareAeroport.service.AirlineCompanyService;
 import com.ProiectIS.GestionareAeroport.service.BookingService;
+import com.ProiectIS.GestionareAeroport.service.DiscountPolicyService;
 import com.ProiectIS.GestionareAeroport.service.FlightSearchService;
 import com.ProiectIS.GestionareAeroport.service.FlightService;
 import jakarta.servlet.http.HttpSession;
@@ -46,17 +48,20 @@ public class PortalController {
     private final FlightSearchService flightSearchService;
     private final BookingService bookingService;
     private final AirportStaffRepository staffRepository;
+    private final DiscountPolicyService discountPolicyService;
 
     public PortalController(AirlineCompanyService airlineService,
                             FlightService flightService,
                             FlightSearchService flightSearchService,
                             BookingService bookingService,
-                            AirportStaffRepository staffRepository) {
+                            AirportStaffRepository staffRepository,
+                            DiscountPolicyService discountPolicyService) {
         this.airlineService = airlineService;
         this.flightService = flightService;
         this.flightSearchService = flightSearchService;
         this.bookingService = bookingService;
         this.staffRepository = staffRepository;
+        this.discountPolicyService = discountPolicyService;
     }
 
     @GetMapping("/")
@@ -234,6 +239,43 @@ public class PortalController {
         model.addAttribute("company", company);
         model.addAttribute("flights", flightService.findDtosByAirline(company.getId()));
         return "dashboard";
+    }
+
+    @GetMapping("/discount-policy")
+    public String discountPolicyPage(HttpSession session, Model model) {
+        if (session.getAttribute("loggedInCompany") == null) {
+            return "redirect:/login";
+        }
+        DiscountPolicy policy = discountPolicyService.getPolicy();
+        model.addAttribute("roundTripDiscountPercent", policy.getRoundTripDiscount());
+        model.addAttribute("lastMinuteDiscountPercent", policy.getLastMinuteDiscount());
+        model.addAttribute("defaultRoundTrip", DiscountPolicy.DEFAULT_ROUND_TRIP_DISCOUNT);
+        model.addAttribute("defaultLastMinute", DiscountPolicy.DEFAULT_LAST_MINUTE_DISCOUNT);
+        return "discount-policy";
+    }
+
+    @PostMapping("/discount-policy")
+    public String updateDiscountPolicy(@RequestParam(required = false) Double roundTripDiscountPercent,
+                                       @RequestParam(required = false) Double lastMinuteDiscountPercent,
+                                       HttpSession session,
+                                       RedirectAttributes redirectAttributes) {
+        if (session.getAttribute("loggedInCompany") == null) {
+            return "redirect:/login";
+        }
+        Double roundTrip = roundTripDiscountPercent == null
+                ? DiscountPolicy.DEFAULT_ROUND_TRIP_DISCOUNT : roundTripDiscountPercent;
+        Double lastMinute = lastMinuteDiscountPercent == null
+                ? DiscountPolicy.DEFAULT_LAST_MINUTE_DISCOUNT : lastMinuteDiscountPercent;
+        try {
+            if (roundTrip < 0 || roundTrip > 100 || lastMinute < 0 || lastMinute > 100) {
+                throw new IllegalArgumentException("Procentele discount-urilor trebuie sa fie intre 0 si 100.");
+            }
+            discountPolicyService.updatePolicy(roundTrip, lastMinute);
+            redirectAttributes.addFlashAttribute("success", "Politica de discount a fost actualizata.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/discount-policy";
     }
 
     @GetMapping("/add-flight")
