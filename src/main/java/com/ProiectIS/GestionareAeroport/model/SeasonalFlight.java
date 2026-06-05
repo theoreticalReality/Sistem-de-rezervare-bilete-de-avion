@@ -91,13 +91,13 @@ public class SeasonalFlight extends Flight {
         if (!start.isAfter(end)) {
             return !md.isBefore(start) && !md.isAfter(end);
         }
-        // sezon care trece de schimbarea de an (ex. 1 Noi → 31 Mar)
         return !md.isBefore(start) || !md.isAfter(end);
     }
 
     @Override
     public boolean isAvailableOn(LocalDate date) {
         if (date == null || daysOfWeek == null) return false;
+        if (getDepartureDate() != null && date.isBefore(getDepartureDate())) return false;
         return isInSeason(date) && daysOfWeek.contains(date.getDayOfWeek());
     }
 

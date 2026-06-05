@@ -71,12 +71,22 @@ public abstract class Flight {
     @JoinColumn(name = "airline_id", nullable = false)
     private AirlineCompany airline;
 
+    @Column(name = "departure_date", nullable = false)
+    private LocalDate departureDate;
+
+    @Column(name = "cancelled", nullable = false)
+    private Boolean cancelled = false;
+
     public Integer getAvailableSeats(ClassType classType) {
         return seats.getOrDefault(classType, 0);
     }
 
     public Double getPriceFor(ClassType classType) {
         return prices.get(classType);
+    }
+
+    public boolean isCancelled() {
+        return Boolean.TRUE.equals(cancelled);
     }
 
     public abstract boolean isAvailableOn(LocalDate date);

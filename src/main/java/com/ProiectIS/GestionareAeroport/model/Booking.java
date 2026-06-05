@@ -4,6 +4,8 @@ import com.ProiectIS.GestionareAeroport.model.enums.ClassType;
 import com.ProiectIS.GestionareAeroport.model.enums.PaymentMethod;
 import com.ProiectIS.GestionareAeroport.model.enums.PaymentStatus;
 import jakarta.persistence.Column;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,12 +16,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "bookings")
@@ -37,6 +42,11 @@ public class Booking {
 
     @Embedded
     private Passenger passenger;
+
+    @ElementCollection
+    @CollectionTable(name = "booking_passenger_details", joinColumns = @JoinColumn(name = "booking_id"))
+    @OrderColumn(name = "passenger_order")
+    private List<PassengerDetail> passengerDetails = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "outbound_flight_id", nullable = false)
@@ -81,6 +91,9 @@ public class Booking {
 
     @Column(name = "round_trip_discount_applied")
     private Boolean roundTripDiscountApplied = false;
+
+    @Column(name = "last_minute_discount_applied")
+    private Boolean lastMinuteDiscountApplied = false;
 
     @Column(name = "outbound_departure")
     private LocalDateTime outboundDeparture;

@@ -42,6 +42,7 @@ public class RegularFlight extends Flight {
     @Override
     public boolean isAvailableOn(LocalDate date) {
         if (date == null || daysOfWeek == null) return false;
+        if (getDepartureDate() != null && date.isBefore(getDepartureDate())) return false;
         return daysOfWeek.contains(date.getDayOfWeek());
     }
 
