@@ -10,6 +10,8 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -42,4 +44,7 @@ public class BookingRequest {
 
     @NotNull
     private PaymentMethod paymentMethod;
+
+    @Valid
+    private List<PassengerDetailDto> passengerDetails = new ArrayList<>();
 }

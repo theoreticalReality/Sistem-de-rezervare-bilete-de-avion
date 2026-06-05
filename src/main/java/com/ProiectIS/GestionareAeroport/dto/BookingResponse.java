@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -26,6 +27,7 @@ public class BookingResponse {
     private Integer totalPassengers;
     private String outboundFlightCode;
     private String returnFlightCode;
+    private String airlineName;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime outboundDeparture;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
@@ -41,7 +43,9 @@ public class BookingResponse {
     private Double extrasPrice;
     private Double discountAmount;
     private Boolean roundTripDiscountApplied;
+    private Boolean lastMinuteDiscountApplied;
     private Double totalPrice;
+    private List<PassengerDetailDto> passengerDetails;
 
     public static BookingResponse fromEntity(Booking b) {
         return BookingResponse.builder()
@@ -51,6 +55,7 @@ public class BookingResponse {
                 .totalPassengers(b.getPassenger() != null ? b.getPassenger().getTotalPassengerCount() : null)
                 .outboundFlightCode(b.getOutboundFlight() != null ? b.getOutboundFlight().getFlightCode() : null)
                 .returnFlightCode(b.getReturnFlight() != null ? b.getReturnFlight().getFlightCode() : null)
+                .airlineName(b.getOutboundFlight() != null && b.getOutboundFlight().getAirline() != null ? b.getOutboundFlight().getAirline().getName() : "N/A")
                 .outboundDeparture(b.getOutboundDeparture())
                 .returnDeparture(b.getReturnDeparture())
                 .selectedClass(b.getSelectedClass())
@@ -63,7 +68,11 @@ public class BookingResponse {
                 .extrasPrice(amountOrZero(b.getExtrasPrice()))
                 .discountAmount(amountOrZero(b.getDiscountAmount()))
                 .roundTripDiscountApplied(Boolean.TRUE.equals(b.getRoundTripDiscountApplied()))
+                .lastMinuteDiscountApplied(Boolean.TRUE.equals(b.getLastMinuteDiscountApplied()))
                 .totalPrice(b.getTotalPrice())
+                .passengerDetails(b.getPassengerDetails() == null ? List.of() : b.getPassengerDetails().stream()
+                        .map(PassengerDetailDto::fromEntity)
+                        .toList())
                 .build();
     }
 

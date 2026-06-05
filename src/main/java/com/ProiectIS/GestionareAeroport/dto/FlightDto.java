@@ -33,10 +33,15 @@ public class FlightDto {
     private String destinationCity;
     private String airlineName;
     private String type;
+    private Boolean cancelled;
     private Map<ClassType, Integer> seats;
     private Map<ClassType, Double> prices;
 
     private List<DayOfWeek> daysOfWeek;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate departureDate;
+
     private LocalTime departureTime;
     private LocalTime arrivalTime;
 
@@ -53,6 +58,7 @@ public class FlightDto {
     }
 
     public static FlightDto fromEntity(Flight flight, LocalDate forDate) {
+        LocalDate displayDate = forDate != null ? forDate : flight.getDepartureDate();
         FlightDto.FlightDtoBuilder b = FlightDto.builder()
                 .id(flight.getId())
                 .flightCode(flight.getFlightCode())
@@ -60,15 +66,17 @@ public class FlightDto {
                 .departureCity(flight.getDepartureCity())
                 .destinationCity(flight.getDestinationCity())
                 .airlineName(flight.getAirline() != null ? flight.getAirline().getName() : null)
+                .cancelled(flight.isCancelled())
                 .seats(flight.getSeats())
-                .prices(flight.getPrices());
+                .prices(flight.getPrices())
+                .departureDate(flight.getDepartureDate());
 
         if (flight instanceof RegularFlight rf) {
             b.type("REGULAR")
                     .daysOfWeek(rf.getDaysOfWeek())
                     .departureTime(rf.getDepartureTime())
                     .arrivalTime(rf.getArrivalTime());
-            if (forDate != null) b.departureDateTime(rf.getDepartureDateTime(forDate));
+            if (displayDate != null) b.departureDateTime(rf.getDepartureDateTime(displayDate));
         } else if (flight instanceof SeasonalFlight sf) {
             b.type("SEASONAL")
                     .daysOfWeek(sf.getDaysOfWeek())
@@ -76,7 +84,7 @@ public class FlightDto {
                     .arrivalTime(sf.getArrivalTime())
                     .seasonStart(sf.getSeasonStart())
                     .seasonEnd(sf.getSeasonEnd());
-            if (forDate != null) b.departureDateTime(sf.getDepartureDateTime(forDate));
+            if (displayDate != null) b.departureDateTime(sf.getDepartureDateTime(displayDate));
         }
         return b.build();
     }
