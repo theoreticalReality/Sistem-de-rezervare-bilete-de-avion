@@ -10,4 +10,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Optional<Booking> findByBookingId(String bookingId);
     List<Booking> findByOutboundFlight_FlightCodeOrReturnFlight_FlightCode(String code1, String code2);
     List<Booking> findByOutboundFlight_FlightCode(String code);
+    List<Booking> findByOutboundFlight_Airline_IdOrReturnFlight_Airline_Id(Long outboundAirlineId, Long returnAirlineId);
+    boolean existsByOutboundFlight_IdOrReturnFlight_Id(Long outboundFlightId, Long returnFlightId);
 }
