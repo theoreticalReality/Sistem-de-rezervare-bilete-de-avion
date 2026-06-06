@@ -1,6 +1,7 @@
 package com.ProiectIS.GestionareAeroport.controller;
 
 import com.ProiectIS.GestionareAeroport.dto.AirlineLoginRequest;
+import com.ProiectIS.GestionareAeroport.dto.AirlineRegistrationRequest;
 import com.ProiectIS.GestionareAeroport.dto.BookingRequest;
 import com.ProiectIS.GestionareAeroport.dto.BookingResponse;
 import com.ProiectIS.GestionareAeroport.dto.CreateRegularFlightRequest;
@@ -33,11 +34,13 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.MonthDay;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -62,6 +65,24 @@ public class PortalController {
         this.bookingService = bookingService;
         this.staffRepository = staffRepository;
         this.discountPolicyService = discountPolicyService;
+    }
+
+    @GetMapping("/api/flights/cities/departure")
+    @ResponseBody
+    public List<String> getDepartureCities() {
+        return flightSearchService.getAvailableDepartureCities();
+    }
+
+    @GetMapping("/api/flights/cities/destination")
+    @ResponseBody
+    public List<String> getDestinations(@RequestParam String from) {
+        return flightSearchService.getAvailableDestinations(from);
+    }
+
+    @GetMapping("/api/flights/available-dates")
+    @ResponseBody
+    public List<LocalDate> getAvailableDates(@RequestParam String from, @RequestParam String to) {
+        return flightSearchService.getAvailableDates(from, to);
     }
 
     @GetMapping("/")
@@ -141,23 +162,53 @@ public class PortalController {
         }
     }
 
+    @GetMapping("/bookings/lookup")
+    public String lookupBooking(@RequestParam String bookingId, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            BookingResponse booking = bookingService.findResponseByBookingId(bookingId.trim());
+            model.addAttribute("booking", booking);
+            return "booking-confirmation";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Nu am gasit nicio rezervare cu codul: " + bookingId);
+            return "redirect:/";
+        }
+    }
+
     @GetMapping("/login")
     public String loginPage(Model model) {
         model.addAttribute("loginRequest", new AirlineLoginRequest());
         return "login";
     }
 
+    @GetMapping("/register")
+    public String registerPage(Model model) {
+        model.addAttribute("registrationRequest", new AirlineRegistrationRequest());
+        return "register";
+    }
+
+    @PostMapping("/register")
+    public String register(@ModelAttribute AirlineRegistrationRequest registrationRequest, RedirectAttributes redirectAttributes) {
+        try {
+            airlineService.register(registrationRequest);
+            redirectAttributes.addFlashAttribute("success", "Contul a fost creat cu succes! Te poti loga acum.");
+            return "redirect:/login";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/register";
+        }
+    }
+
     @PostMapping("/login")
     public String login(@ModelAttribute AirlineLoginRequest loginRequest, HttpSession session, RedirectAttributes redirectAttributes) {
-        System.out.println("Tentativă de login pentru: " + loginRequest.getEmail());
+        System.out.println("Tentativa de login pentru: " + loginRequest.getEmail());
         try {
             AirlineCompany company = airlineService.login(loginRequest.getEmail(), loginRequest.getPassword());
-            System.out.println("Login reușit pentru: " + company.getName());
+            System.out.println("Login reusit pentru: " + company.getName());
             session.setAttribute("loggedInCompany", company);
             return "redirect:/dashboard";
         } catch (Exception e) {
-            System.out.println("Login eșuat: " + e.getMessage());
-            redirectAttributes.addFlashAttribute("error", "Email/ID companie sau parolă incorecte.");
+            System.out.println("Login esuat: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Email/ID companie sau parola incorecte.");
             return "redirect:/login";
         }
     }
@@ -172,6 +223,32 @@ public class PortalController {
     public String staffLoginPage(Model model) {
         model.addAttribute("loginRequest", new StaffLoginRequest());
         return "staff-login";
+    }
+
+    @GetMapping("/staff/register")
+    public String staffRegisterPage() {
+        return "staff-register";
+    }
+
+    @PostMapping("/staff/register")
+    public String staffRegister(@RequestParam String name, 
+                                @RequestParam String personalCode, 
+                                RedirectAttributes redirectAttributes) {
+        try {
+            if (staffRepository.findByPersonalCode(personalCode).isPresent()) {
+                throw new IllegalArgumentException("Acest cod personal este deja folosit.");
+            }
+            AirportStaff staff = new AirportStaff();
+            staff.setName(name);
+            staff.setPersonalCode(personalCode);
+            staff.setStaffId("STAFF-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            staffRepository.save(staff);
+            redirectAttributes.addFlashAttribute("success", "Codul personal a fost creat! Te poti loga acum.");
+            return "redirect:/staff/login";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/staff/register";
+        }
     }
 
     @PostMapping("/staff/login")
@@ -191,6 +268,7 @@ public class PortalController {
 
     @GetMapping("/staff/dashboard")
     public String staffDashboard(@RequestParam(required = false) String flightCode,
+                                 @RequestParam(required = false) String bookingId,
                                  HttpSession session,
                                  Model model) {
         AirportStaff staff = (AirportStaff) session.getAttribute("loggedInStaff");
@@ -199,11 +277,24 @@ public class PortalController {
         }
 
         String normalizedFlightCode = flightCode == null ? "" : flightCode.trim();
+        String normalizedBookingId = bookingId == null ? "" : bookingId.trim();
+
         model.addAttribute("staff", staff);
         model.addAttribute("selectedFlightCode", normalizedFlightCode);
+        model.addAttribute("selectedBookingId", normalizedBookingId);
         model.addAttribute("flights", flightService.findAllDtos());
 
-        if (!normalizedFlightCode.isBlank()) {
+        if (!normalizedBookingId.isBlank()) {
+            try {
+                BookingResponse booking = bookingService.findResponseByBookingId(normalizedBookingId);
+                model.addAttribute("bookings", List.of(booking));
+                model.addAttribute("selectedFlightCode", ""); 
+            } catch (Exception e) {
+                model.addAttribute("error", "Nu am gasit nicio rezervare cu ID-ul: " + normalizedBookingId);
+                model.addAttribute("bookings", List.of());
+            }
+        }
+ else if (!normalizedFlightCode.isBlank()) {
             model.addAttribute("bookings", bookingService.findResponsesByFlightCode(normalizedFlightCode));
         }
 
@@ -221,7 +312,7 @@ public class PortalController {
 
         try {
             bookingService.confirmCashPayment(bookingId);
-            redirectAttributes.addFlashAttribute("success", "Plata cash a fost validată.");
+            redirectAttributes.addFlashAttribute("success", "Plata cash a fost validata.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -238,7 +329,23 @@ public class PortalController {
         }
         model.addAttribute("company", company);
         model.addAttribute("flights", flightService.findDtosByAirline(company.getId()));
+        model.addAttribute("bookings", bookingService.findResponsesByAirline(company.getId()));
         return "dashboard";
+    }
+
+    @GetMapping("/flights/{flightCode}/occupancy")
+    public String flightOccupancy(@PathVariable String flightCode, HttpSession session, Model model) {
+        AirlineCompany company = (AirlineCompany) session.getAttribute("loggedInCompany");
+        if (company == null) {
+            return "redirect:/login";
+        }
+        try {
+            model.addAttribute("company", company);
+            model.addAttribute("stats", flightService.getFlightOccupancy(company.getId(), flightCode));
+            return "flight-occupancy";
+        } catch (Exception e) {
+            return "redirect:/dashboard";
+        }
     }
 
     @GetMapping("/discount-policy")
@@ -339,7 +446,6 @@ public class PortalController {
             prices.put(ClassType.FIRST_CLASS, Double.parseDouble(allParams.get("prices_FIRST")));
             prices.put(ClassType.ECONOMY, Double.parseDouble(allParams.get("prices_ECONOMY")));
             
-            // Parsare MonthDay (format MM-dd)
             request.setSeasonStart(MonthDay.parse("--" + allParams.get("seasonStartStr")));
             request.setSeasonEnd(MonthDay.parse("--" + allParams.get("seasonEndStr")));
 
@@ -362,7 +468,7 @@ public class PortalController {
         try {
             Flight flight = flightService.findByCode(flightCode);
             if (flight.getAirline() == null || !flight.getAirline().getId().equals(company.getId())) {
-                redirectAttributes.addFlashAttribute("error", "Nu poți edita un zbor care nu îți aparține.");
+                redirectAttributes.addFlashAttribute("error", "Nu poti edita un zbor care nu iti apartine.");
                 return "redirect:/dashboard";
             }
 
@@ -432,11 +538,18 @@ public class PortalController {
     }
 
     @PostMapping("/delete-flight/{flightCode}")
-    public String deleteFlight(@PathVariable String flightCode, HttpSession session) {
+    public String deleteFlight(@PathVariable String flightCode,
+                               HttpSession session,
+                               RedirectAttributes redirectAttributes) {
         AirlineCompany company = (AirlineCompany) session.getAttribute("loggedInCompany");
         if (company == null) return "redirect:/login";
-        
-        flightService.removeFlight(company.getId(), flightCode);
+
+        try {
+            flightService.removeFlight(company.getId(), flightCode);
+            redirectAttributes.addFlashAttribute("success", "Operatiunea a fost aplicata. Daca zborul avea rezervari, a fost anulat si pastrat in istoric.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
         return "redirect:/dashboard";
     }
 
@@ -480,11 +593,18 @@ public class PortalController {
     }
 
     private void addBookingFormAttributes(Model model, BookingRequest request) {
-        model.addAttribute("outboundFlight", flightService.findDtoById(request.getOutboundFlightId(), request.getOutboundDate()));
-        model.addAttribute("returnFlight", request.getReturnFlightId() == null ? null
-                : flightService.findDtoById(request.getReturnFlightId(), request.getReturnDate()));
+        var outboundFlight = flightService.findDtoById(request.getOutboundFlightId(), request.getOutboundDate());
+        var returnFlight = request.getReturnFlightId() == null ? null
+                : flightService.findDtoById(request.getReturnFlightId(), request.getReturnDate());
+        DiscountPolicy policy = discountPolicyService.getPolicy();
+
+        model.addAttribute("outboundFlight", outboundFlight);
+        model.addAttribute("returnFlight", returnFlight);
         model.addAttribute("classTypes", ClassType.values());
         model.addAttribute("paymentMethods", PaymentMethod.values());
+        model.addAttribute("roundTripDiscountPercent", policy.getRoundTripDiscount());
+        model.addAttribute("lastMinuteDiscountPercent", policy.getLastMinuteDiscount());
+        model.addAttribute("lastMinuteDiscountApplies", policy.isLastMinute(outboundFlight.getDepartureDateTime()));
     }
 
     private String formatMonthDay(MonthDay monthDay) {

@@ -27,11 +27,11 @@ public class PriceCalculator {
 
     public Double calculateTicketPrice(Flight flight, ClassType classType, Integer passengerCount) {
         if (flight == null || classType == null || passengerCount == null || passengerCount <= 0) {
-            throw new BadRequestException("Datele de calcul preț sunt invalide.");
+            throw new BadRequestException("Datele de calcul pret sunt invalide.");
         }
         Double pricePerSeat = flight.getPriceFor(classType);
         if (pricePerSeat == null) {
-            throw new BadRequestException("Clasa selectată nu este disponibilă pe acest zbor.");
+            throw new BadRequestException("Clasa selectata nu este disponibila pe acest zbor.");
         }
         return pricePerSeat * passengerCount;
     }
@@ -57,7 +57,7 @@ public class PriceCalculator {
 
     public Double calculateTotal(Booking booking) {
         if (booking.getPassenger() == null || booking.getSelectedClass() == null) {
-            throw new BadRequestException("Rezervarea este incompletă.");
+            throw new BadRequestException("Rezervarea este incompleta.");
         }
         PriceQuote quote = quote(
                 booking.getOutboundFlight(),
@@ -93,7 +93,10 @@ public class PriceCalculator {
             roundTripApplied = true;
         }
 
-        // Cerinta cere doar discount pentru tur-retur in calculul final.
+        if (discountPolicyService.getPolicy().isLastMinute(outboundDeparture)) {
+            discounted = applyLastMinuteDiscount(discounted, outboundDeparture);
+            lastMinuteApplied = true;
+        }
 
         double extras = calculateExtras(basePrice, mealIncluded, extraLuggage);
 
