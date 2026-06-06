@@ -22,22 +22,30 @@
     <div th:if="${success != null and !#strings.isEmpty(success)}" class="alert alert-success" th:text="${success}"></div>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Rezervări pe zbor</h2>
+        <h2>Rezervari pe zbor</h2>
     </div>
 
-    <form th:action="@{/staff/dashboard}" method="get" class="row g-3 align-items-end mb-4">
-        <div class="col-md-8">
-            <label class="form-label">Cod zbor</label>
-            <input list="flightCodes" name="flightCode" class="form-control" th:value="${selectedFlightCode}" required>
-            <datalist id="flightCodes">
-                <option th:each="flight : ${flights}" th:value="${flight.flightCode}"
-                        th:text="${flight.departureCity + ' -> ' + flight.destinationCity}"></option>
-            </datalist>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form th:action="@{/staff/dashboard}" method="get" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Cauta dupa Cod Zbor</label>
+                    <input list="flightCodes" name="flightCode" class="form-control" th:value="${selectedFlightCode}" placeholder="ex: FL123">
+                    <datalist id="flightCodes">
+                        <option th:each="flight : ${flights}" th:value="${flight.flightCode}"
+                                th:text="${flight.departureCity + ' -> ' + flight.destinationCity}"></option>
+                    </datalist>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-bold"> Dupa ID Rezervare</label>
+                    <input type="text" name="bookingId" class="form-control" th:value="${selectedBookingId}" placeholder="ex: BK-12345678">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Cauta</button>
+                </div>
+            </form>
         </div>
-        <div class="col-md-4">
-            <button type="submit" class="btn btn-primary w-100">Caută rezervări</button>
-        </div>
-    </form>
+    </div>
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -45,19 +53,23 @@
                 <thead class="table-light">
                 <tr>
                     <th>ID rezervare</th>
+                    <th>Companie</th>
                     <th>Pasager</th>
                     <th>Telefon</th>
                     <th>Nr. pasageri</th>
                     <th>Zbor dus</th>
-                    <th>Zbor întors</th>
-                    <th>Plată</th>
+                    <th>Zbor intors</th>
+                    <th>Plata</th>
                     <th>Total</th>
-                    <th>Acțiuni</th>
+                    <th>Actiuni</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="booking : ${bookings}">
                     <td th:text="${booking.bookingId}">BK-123</td>
+                    <td>
+                        <span class="badge bg-dark" th:text="${booking.airlineName}">Companie</span>
+                    </td>
                     <td th:text="${booking.passengerName}">Pasager</td>
                     <td th:text="${booking.phoneNumber}">Telefon</td>
                     <td th:text="${booking.totalPassengers}">1</td>
@@ -75,17 +87,17 @@
                               th:action="@{'/staff/bookings/' + ${booking.bookingId} + '/confirm-payment'}"
                               method="post">
                             <input type="hidden" name="flightCode" th:value="${selectedFlightCode}">
-                            <button type="submit" class="btn btn-success btn-sm">Validează cash</button>
+                            <button type="submit" class="btn btn-success btn-sm">Valideaza cash</button>
                         </form>
                         <span th:unless="${booking.paymentMethod.name() == 'CASH' and booking.paymentStatus.name() == 'PENDING'}"
                               class="text-muted">-</span>
                     </td>
                 </tr>
                 <tr th:if="${selectedFlightCode != null and !#strings.isEmpty(selectedFlightCode) and #lists.isEmpty(bookings)}">
-                    <td colspan="9" class="text-center py-4">Nu există rezervări pentru acest zbor.</td>
+                    <td colspan="10" class="text-center py-4">Nu exista rezervari pentru acest zbor.</td>
                 </tr>
                 <tr th:if="${selectedFlightCode == null or #strings.isEmpty(selectedFlightCode)}">
-                    <td colspan="9" class="text-center py-4">Introduceți codul zborului pentru a vedea rezervările.</td>
+                    <td colspan="10" class="text-center py-4">Introduceti codul zborului pentru a vedea rezervarile.</td>
                 </tr>
                 </tbody>
             </table>
