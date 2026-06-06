@@ -26,10 +26,10 @@ public class AirlineCompanyService {
     @Transactional
     public AirlineCompany register(AirlineRegistrationRequest request) {
         if (repository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Există deja o companie cu acest email.");
+            throw new BadRequestException("Exista deja o companie cu acest email.");
         }
         if (repository.existsByCompanyId(request.getCompanyId())) {
-            throw new BadRequestException("Există deja o companie cu acest ID.");
+            throw new BadRequestException("Exista deja o companie cu acest ID.");
         }
         AirlineCompany company = new AirlineCompany();
         company.setCompanyId(request.getCompanyId());
@@ -44,9 +44,9 @@ public class AirlineCompanyService {
         String normalizedIdentifier = identifier == null ? "" : identifier.trim();
         AirlineCompany company = repository.findByEmail(normalizedIdentifier)
                 .or(() -> repository.findByCompanyId(normalizedIdentifier))
-                .orElseThrow(() -> new UnauthorizedException("Email/ID companie sau parolă incorecte."));
+                .orElseThrow(() -> new UnauthorizedException("Email/ID companie sau parola incorecte."));
         if (!passwordEncoder.matches(password, company.getPasswordHash())) {
-            throw new UnauthorizedException("Email/ID companie sau parolă incorecte.");
+            throw new UnauthorizedException("Email/ID companie sau parola incorecte.");
         }
         return company;
     }
@@ -54,13 +54,13 @@ public class AirlineCompanyService {
     @Transactional(readOnly = true)
     public AirlineCompany findById(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Compania nu a fost găsită: " + id));
+                .orElseThrow(() -> new NotFoundException("Compania nu a fost gasita: " + id));
     }
 
     @Transactional(readOnly = true)
     public AirlineCompany findByCompanyId(String companyId) {
         return repository.findByCompanyId(companyId)
-                .orElseThrow(() -> new NotFoundException("Compania nu a fost găsită: " + companyId));
+                .orElseThrow(() -> new NotFoundException("Compania nu a fost gasita: " + companyId));
     }
 
     @Transactional(readOnly = true)

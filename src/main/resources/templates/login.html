@@ -25,19 +25,23 @@
         </div>
         <div class="card-body">
             <div th:if="${error != null and !#strings.isEmpty(error)}" class="alert alert-danger" th:text="${error}"></div>
+            <div th:if="${success != null and !#strings.isEmpty(success)}" class="alert alert-success" th:text="${success}"></div>
+            
             <form th:action="@{/login}" th:object="${loginRequest}" method="post">
                 <div class="mb-3">
                     <label class="form-label">Email sau ID companie</label>
-                    <input type="text" th:field="*{email}" class="form-label form-control" required>
+                    <input type="text" th:field="*{email}" class="form-control" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Parolă</label>
-                    <input type="password" th:field="*{password}" class="form-label form-control" required>
+                    <label class="form-label">Parola</label>
+                    <input type="password" th:field="*{password}" class="form-control" required>
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Autentificare</button>
             </form>
+            
             <div class="mt-3 text-center">
-                <a th:href="@{/}">Înapoi la panoul principal</a>
+                <p>Nu ai cont? <a th:href="@{/register}">Inregistreaza-te aici</a></p>
+                <a th:href="@{/}">Inapoi la panoul principal</a>
             </div>
         </div>
     </div>
