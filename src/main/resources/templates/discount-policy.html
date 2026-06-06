@@ -27,11 +27,11 @@
         </div>
         <div class="card-body">
             <p class="text-muted">
-                Sistemul oferă două tipuri de discount-uri obligatorii. Dacă nu este introdusă o altă valoare,
+                Sistemul ofera doua tipuri de discount-uri obligatorii. Daca nu este introdusa o alta valoare,
                 se folosesc valorile implicite:
-                <strong><span th:text="${defaultRoundTrip}">5</span>%</strong> pentru tur-retur și
+                <strong><span th:text="${defaultRoundTrip}">5</span>%</strong> pentru tur-retur si
                 <strong><span th:text="${defaultLastMinute}">40</span>%</strong> pentru last-minute
-                (zboruri în următoarele 48 de ore de la rezervare).
+                (zboruri in urmatoarele 48 de ore de la rezervare).
             </p>
 
             <form th:action="@{/discount-policy}" method="post">
@@ -41,18 +41,18 @@
                         <input type="number" name="roundTripDiscountPercent" class="form-control"
                                min="0" max="100" step="0.01"
                                th:value="${roundTripDiscountPercent}" required>
-                        <div class="form-text">Aplicat când există atât zbor tur cât și zbor retur.</div>
+                        <div class="form-text">Aplicat cand exista atat zbor tur cat si zbor retur.</div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Discount last-minute (%)</label>
                         <input type="number" name="lastMinuteDiscountPercent" class="form-control"
                                min="0" max="100" step="0.01"
                                th:value="${lastMinuteDiscountPercent}" required>
-                        <div class="form-text">Configurat pentru zboruri în 48h. Nu se aplică momentan în calculul preţului.</div>
+                        <div class="form-text">Configurat pentru zboruri in 48h. Nu se aplica momentan in calculul pretului.</div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Salvează</button>
-                <a th:href="@{/dashboard}" class="btn btn-secondary">Înapoi la dashboard</a>
+                <button type="submit" class="btn btn-primary">Salveaza</button>
+                <a th:href="@{/dashboard}" class="btn btn-secondary">Inapoi la dashboard</a>
             </form>
         </div>
     </div>
