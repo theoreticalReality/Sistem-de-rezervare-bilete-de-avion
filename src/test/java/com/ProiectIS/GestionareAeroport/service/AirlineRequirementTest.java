@@ -11,6 +11,7 @@ import com.ProiectIS.GestionareAeroport.model.RegularFlight;
 import com.ProiectIS.GestionareAeroport.model.SeasonalFlight;
 import com.ProiectIS.GestionareAeroport.model.enums.ClassType;
 import com.ProiectIS.GestionareAeroport.repository.AirlineCompanyRepository;
+import com.ProiectIS.GestionareAeroport.repository.BookingRepository;
 import com.ProiectIS.GestionareAeroport.repository.FlightRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.MonthDay;
 import java.util.EnumMap;
@@ -42,7 +44,8 @@ class AirlineRequirementTest {
     private final AirlineCompanyService airlineCompanyService = new AirlineCompanyService(airlineRepository, passwordEncoder);
 
     private final FlightRepository flightRepository = mock(FlightRepository.class);
-    private final FlightService flightService = new FlightService(flightRepository, airlineCompanyService);
+    private final BookingRepository bookingRepository = mock(BookingRepository.class);
+    private final FlightService flightService = new FlightService(flightRepository, airlineCompanyService, bookingRepository);
 
     @Test
     void airlineCanLoginWithEmailAndCorrectPassword() {
@@ -96,6 +99,7 @@ class AirlineRequirementTest {
                 .containsEntry(ClassType.FIRST_CLASS, 600.0)
                 .containsEntry(ClassType.ECONOMY, 250.0);
         assertThat(result.getDaysOfWeek()).containsExactly(DayOfWeek.MONDAY, DayOfWeek.FRIDAY);
+        assertThat(result.getDepartureDate()).isEqualTo(LocalDate.of(2026, 6, 1));
         assertThat(result.getDepartureTime()).isEqualTo(LocalTime.of(8, 30));
         assertThat(result.getAirline()).isSameAs(company);
     }
@@ -111,6 +115,7 @@ class AirlineRequirementTest {
         SeasonalFlight result = flightService.addSeasonalFlight(10L, request);
 
         assertThat(result.getFlightCode()).isEqualTo("SUN77");
+        assertThat(result.getDepartureDate()).isEqualTo(LocalDate.of(2026, 6, 1));
         assertThat(result.getSeasonStart()).isEqualTo(MonthDay.of(6, 1));
         assertThat(result.getSeasonEnd()).isEqualTo(MonthDay.of(8, 31));
         assertThat(result.isAvailableOn(java.time.LocalDate.of(2026, 6, 1))).isTrue();
@@ -181,13 +186,24 @@ class AirlineRequirementTest {
                 .isInstanceOf(NotFoundException.class);
     }
 
-    private AirlineCompany airline(Long id, String companyId, String email, String passwordHash) {
+    @Test
+    void addRegularFlightRejectsDurationLongerThan19Hours() {
+        CreateRegularFlightRequest request = regularRequest("RO-LONG");
+        request.setDepartureTime(LocalTime.of(10, 0));
+        request.setArrivalTime(LocalTime.of(6, 0)); 
+
+        assertThatThrownBy(() -> flightService.addRegularFlight(1L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Durata zborului este prea mare (>19h)");
+    }
+
+    private AirlineCompany airline(Long id, String companyId, String email, String password) {
         AirlineCompany company = new AirlineCompany();
         company.setId(id);
         company.setCompanyId(companyId);
         company.setName("Test Air");
         company.setEmail(email);
-        company.setPasswordHash(passwordHash);
+        company.setPasswordHash(password);
         return company;
     }
 
@@ -200,6 +216,7 @@ class AirlineRequirementTest {
         request.setSeats(seats());
         request.setPrices(prices());
         request.setDaysOfWeek(List.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY));
+        request.setDepartureDate(LocalDate.of(2026, 6, 1));
         request.setDepartureTime(LocalTime.of(8, 30));
         request.setArrivalTime(LocalTime.of(11, 10));
         return request;
@@ -214,6 +231,7 @@ class AirlineRequirementTest {
         request.setSeats(seats());
         request.setPrices(prices());
         request.setDaysOfWeek(List.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY));
+        request.setDepartureDate(LocalDate.of(2026, 6, 1));
         request.setDepartureTime(LocalTime.of(6, 15));
         request.setArrivalTime(LocalTime.of(9, 45));
         request.setSeasonStart(MonthDay.of(6, 1));
