@@ -69,19 +69,25 @@
                         <div class="border rounded p-3 mb-3" th:each="classType : ${classTypes}">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" th:field="*{selectedClass}"
-                                       th:value="${classType}" required>
-                                <label class="form-check-label fw-semibold" th:text="${classType}">ECONOMY</label>
+                                       th:value="${classType}" required
+                                       th:attr="data-outbound-price=${outboundFlight.prices.get(classType)},data-return-price=${returnFlight != null ? returnFlight.prices.get(classType) : 0}">
+                                <label class="form-check-label fw-semibold" 
+                                       th:text="${classType.name() == 'FIRST_CLASS' ? 'Clasa 1' : (classType.name() == 'BUSINESS' ? 'Business' : 'Economie')}">ECONOMY</label>
                             </div>
                             <div class="row small text-muted mt-2">
                                 <div class="col-6">
                                     Tur:
                                     <span th:text="${outboundFlight.seats.get(classType)}">0</span> locuri,
+                                    Pret:
                                     <span th:text="${#numbers.formatDecimal(outboundFlight.prices.get(classType), 1, 2)}">0.00</span>
+                                    lei
                                 </div>
                                 <div class="col-6" th:if="${returnFlight != null}">
                                     Retur:
                                     <span th:text="${returnFlight.seats.get(classType)}">0</span> locuri,
+                                    Pret:
                                     <span th:text="${#numbers.formatDecimal(returnFlight.prices.get(classType), 1, 2)}">0.00</span>
+                                    lei
                                 </div>
                             </div>
                         </div>
@@ -96,14 +102,6 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-7">
-                                <label class="form-label">Nume</label>
-                                <input type="text" class="form-control" th:field="*{passenger.name}" required>
-                            </div>
-                            <div class="col-md-5">
-                                <label class="form-label">Telefon</label>
-                                <input type="text" class="form-control" th:field="*{passenger.phoneNumber}" required>
-                            </div>
                             <div class="col-md-4">
                                 <label class="form-label">Adulti</label>
                                 <input type="number" class="form-control" th:field="*{passenger.numberOfAdults}" min="0" required>
@@ -116,6 +114,10 @@
                                 <label class="form-label">Seniori</label>
                                 <input type="number" class="form-control" th:field="*{passenger.numberOfSeniors}" min="0" required>
                             </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="h6">Date pasageri</h3>
+                            <div id="passengerDetails" class="vstack gap-3"></div>
                         </div>
                     </div>
                 </section>
@@ -153,10 +155,182 @@
                     </div>
                 </section>
 
+                <section class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h2 class="h5 mb-0">Total estimat</h2>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-7">Pasageri</dt>
+                            <dd class="col-5 text-end" id="summaryPassengers">1</dd>
+                            <dt class="col-7">Bilete</dt>
+                            <dd class="col-5 text-end" id="summaryTickets">0 lei</dd>
+                            <dt class="col-7" th:if="${returnFlight != null}">Discount tur-retur</dt>
+                            <dd class="col-5 text-end" th:if="${returnFlight != null}" id="summaryDiscount">0 lei</dd>
+                            <dt class="col-7" th:if="${lastMinuteDiscountApplies}">Discount last-minute</dt>
+                            <dd class="col-5 text-end" th:if="${lastMinuteDiscountApplies}" id="summaryLastMinuteDiscount">0 lei</dd>
+                            <dt class="col-7">Optiuni</dt>
+                            <dd class="col-5 text-end" id="summaryExtras">0 lei</dd>
+                            <dt class="col-7 border-top pt-2">Total</dt>
+                            <dd class="col-5 text-end border-top pt-2 fw-bold" id="summaryTotal">0 lei</dd>
+                        </dl>
+                    </div>
+                </section>
+
                 <button type="submit" class="btn btn-success">Finalizeaza rezervarea</button>
             </div>
         </div>
     </form>
 </main>
+<script th:inline="javascript">
+    const hasReturnFlight =  false;
+    const roundTripDiscountPercent = Number( 0);
+    const lastMinuteDiscountApplies =  false;
+    const lastMinuteDiscountPercent = Number( 0);
+    const moneyFormatter = new Intl.NumberFormat('ro-RO', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    const adultsInput = document.querySelector('[name="passenger.numberOfAdults"]');
+    const childrenInput = document.querySelector('[name="passenger.numberOfChildren"]');
+    const seniorsInput = document.querySelector('[name="passenger.numberOfSeniors"]');
+    const mealInput = document.querySelector('[name="mealIncluded"]');
+    const luggageInput = document.querySelector('[name="extraLuggage"]');
+    const classInputs = document.querySelectorAll('[name="selectedClass"]');
+    const passengerDetails = document.getElementById('passengerDetails');
+
+    function numericValue(input) {
+        return Math.max(0, Number(input?.value || 0));
+    }
+
+    function formatLei(value) {
+        return `${moneyFormatter.format(value)} lei`;
+    }
+
+    function passengerTypeLabel(type) {
+        if (type === 'ADULT') return 'Adult';
+        if (type === 'CHILD') return 'Copil';
+        return 'Senior';
+    }
+
+    function detailCard(type, number, index) {
+        const needsContact = type !== 'CHILD';
+        return `
+            <div class="border rounded p-3">
+                <div class="fw-semibold mb-2">${passengerTypeLabel(type)} ${number}</div>
+                <input type="hidden" name="passengerDetails[${index}].type" value="${type}">
+                <div class="row g-3">
+                    <div class="${needsContact ? 'col-md-4' : 'col-md-12'}">
+                        <label class="form-label">Nume</label>
+                        <input type="text" class="form-control" name="passengerDetails[${index}].name" 
+                               required pattern="^[A-Za-zÀ-ÿ\\s\\-]+$" title="Numele trebuie sa contina doar litere.">
+                    </div>
+                    ${needsContact ? `
+                        <div class="col-md-4">
+                            <label class="form-label">Telefon</label>
+                            <input type="text" class="form-control" name="passengerDetails[${index}].phoneNumber" 
+                                   required pattern="^[0-9\\+\\s]{10,15}$" title="Telefonul trebuie sa contina doar cifre (10-15 cifre).">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="passengerDetails[${index}].email" required>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderPassengerDetails() {
+        const existingValues = new Map();
+        passengerDetails.querySelectorAll('input[name^="passengerDetails"]').forEach((input) => {
+            existingValues.set(input.name, input.value);
+        });
+
+        const groups = [
+            ['ADULT', numericValue(adultsInput)],
+            ['CHILD', numericValue(childrenInput)],
+            ['SENIOR', numericValue(seniorsInput)]
+        ];
+        let index = 0;
+        let html = '';
+        groups.forEach(([type, count]) => {
+            for (let i = 1; i <= count; i++) {
+                html += detailCard(type, i, index);
+                index++;
+            }
+        });
+        passengerDetails.innerHTML = html || '<div class="text-muted">Selecteaza cel putin un pasager.</div>';
+        passengerDetails.querySelectorAll('input[name^="passengerDetails"]').forEach((input) => {
+            if (existingValues.has(input.name) && input.type !== 'hidden') {
+                input.value = existingValues.get(input.name);
+            }
+        });
+    }
+
+    function updateEstimatedTotal() {
+        const selectedClass = document.querySelector('[name="selectedClass"]:checked');
+        if (!selectedClass) return;
+
+        const passengers = numericValue(adultsInput) + numericValue(childrenInput) + numericValue(seniorsInput);
+        const passengerCount = Math.max(1, passengers);
+        const outboundPrice = Number(selectedClass.dataset.outboundPrice || 0);
+        const returnPrice = Number(selectedClass.dataset.returnPrice || 0);
+        const ticketBase = (outboundPrice + returnPrice) * passengerCount;
+        const roundTripDiscount = hasReturnFlight ? ticketBase * roundTripDiscountPercent / 100 : 0;
+        const afterRoundTripDiscount = ticketBase - roundTripDiscount;
+        const lastMinuteDiscount = lastMinuteDiscountApplies ? afterRoundTripDiscount * lastMinuteDiscountPercent / 100 : 0;
+        const extrasPercent = (mealInput?.checked ? 5 : 0) + (luggageInput?.checked ? 5 : 0);
+        const extras = ticketBase * extrasPercent / 100;
+        const total = afterRoundTripDiscount - lastMinuteDiscount + extras;
+
+        document.getElementById('summaryPassengers').textContent = passengerCount;
+        document.getElementById('summaryTickets').textContent = formatLei(ticketBase);
+        document.getElementById('summaryExtras').textContent = formatLei(extras);
+        document.getElementById('summaryTotal').textContent = formatLei(total);
+
+        const discountElement = document.getElementById('summaryDiscount');
+        if (discountElement) {
+            discountElement.textContent = `-${formatLei(roundTripDiscount)}`;
+        }
+
+        const lastMinuteDiscountElement = document.getElementById('summaryLastMinuteDiscount');
+        if (lastMinuteDiscountElement) {
+            lastMinuteDiscountElement.textContent = `-${formatLei(lastMinuteDiscount)}`;
+        }
+    }
+
+    [adultsInput, childrenInput, seniorsInput, mealInput, luggageInput, ...classInputs]
+        .filter(Boolean)
+        .forEach((input) => input.addEventListener('input', () => {
+            if ([adultsInput, childrenInput, seniorsInput].includes(input)) {
+                renderPassengerDetails();
+            }
+            updateEstimatedTotal();
+        }));
+    [mealInput, luggageInput, ...classInputs]
+        .filter(Boolean)
+        .forEach((input) => input.addEventListener('change', updateEstimatedTotal));
+
+    renderPassengerDetails();
+    updateEstimatedTotal();
+
+    
+    let isDirty = false;
+    document.querySelector('form').addEventListener('submit', () => { isDirty = false; });
+    
+    
+    document.querySelectorAll('input, select, radio').forEach(el => {
+        el.addEventListener('change', () => { isDirty = true; });
+    });
+
+    window.addEventListener('beforeunload', function (e) {
+        if (isDirty) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+</script>
 </body>
 </html>

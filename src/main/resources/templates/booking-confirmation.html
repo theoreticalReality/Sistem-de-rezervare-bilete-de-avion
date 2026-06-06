@@ -33,9 +33,25 @@
                 <dt class="col-sm-4">Numar pasageri</dt>
                 <dd class="col-sm-8" th:text="${booking.totalPassengers}">1</dd>
 
+                <dt class="col-sm-4">Date pasageri</dt>
+                <dd class="col-sm-8">
+                    <div th:each="passenger : ${booking.passengerDetails}" class="mb-1">
+                        <span class="badge bg-light text-dark border" 
+                              th:text="${passenger.type == 'ADULT' ? 'Adult' : (passenger.type == 'CHILD' ? 'Copil' : 'Senior')}">ADULT</span>
+                        <span th:text="${passenger.name}" class="ms-1 fw-medium">Nume</span>
+                        <span th:if="${passenger.phoneNumber != null}" class="text-muted small"
+                              th:text="' | tel: ' + ${passenger.phoneNumber}"></span>
+                        <span th:if="${passenger.email != null}" class="text-muted small"
+                              th:text="' | email: ' + ${passenger.email}"></span>
+                    </div>
+                </dd>
+
+                <dt class="col-sm-4">Companie</dt>
+                <dd class="col-sm-8 fw-semibold" th:text="${booking.airlineName}">Companie Aeriana</dd>
+
                 <dt class="col-sm-4">Zbor tur</dt>
                 <dd class="col-sm-8">
-                    <span th:text="${booking.outboundFlightCode}">FL001</span>
+                    <span class="fw-medium" th:text="${booking.outboundFlightCode}">FL001</span>
                     <span class="text-muted"
                           th:text="${booking.outboundDeparture != null ? ' - ' + #temporals.format(booking.outboundDeparture, 'dd.MM.yyyy HH:mm') : ''}">
                     </span>
@@ -43,14 +59,15 @@
 
                 <dt class="col-sm-4" th:if="${booking.returnFlightCode != null}">Zbor retur</dt>
                 <dd class="col-sm-8" th:if="${booking.returnFlightCode != null}">
-                    <span th:text="${booking.returnFlightCode}">FL002</span>
+                    <span class="fw-medium" th:text="${booking.returnFlightCode}">FL002</span>
                     <span class="text-muted"
                           th:text="${booking.returnDeparture != null ? ' - ' + #temporals.format(booking.returnDeparture, 'dd.MM.yyyy HH:mm') : ''}">
                     </span>
                 </dd>
 
                 <dt class="col-sm-4">Clasa</dt>
-                <dd class="col-sm-8" th:text="${booking.selectedClass}">ECONOMY</dd>
+                <dd class="col-sm-8" 
+                    th:text="${booking.selectedClass.name() == 'FIRST_CLASS' ? 'Clasa 1' : (booking.selectedClass.name() == 'BUSINESS' ? 'Business' : 'Economie')}">ECONOMY</dd>
 
                 <dt class="col-sm-4">Optiuni</dt>
                 <dd class="col-sm-8">
@@ -64,31 +81,34 @@
                     <span class="badge bg-secondary" th:text="${booking.paymentMethod}">CARD</span>
                     <span class="badge"
                           th:classappend="${booking.paymentStatus.name() == 'CONFIRMED'} ? ' bg-success' : ' bg-warning text-dark'"
-                          th:text="${booking.paymentStatus}">CONFIRMED</span>
+                          th:text="${booking.paymentStatus.name() == 'CONFIRMED' ? 'CONFIRMATA' : 'IN ASTEPTARE'}">CONFIRMED</span>
                 </dd>
 
                 <dt class="col-sm-4">Pret bilete</dt>
                 <dd class="col-sm-8">
-                    <span th:text="${#numbers.formatDecimal(booking.basePrice, 1, 2)}">0.00</span>
+                    <span th:text="${#numbers.formatDecimal(booking.basePrice, 1, 2)}">0.00</span> lei
                 </dd>
 
                 <dt class="col-sm-4">Optiuni suplimentare</dt>
                 <dd class="col-sm-8">
-                    <span th:text="${#numbers.formatDecimal(booking.extrasPrice, 1, 2)}">0.00</span>
+                    <span th:text="${#numbers.formatDecimal(booking.extrasPrice, 1, 2)}">0.00</span> lei
                 </dd>
 
-                <dt class="col-sm-4">Discount tur-retur</dt>
+                <dt class="col-sm-4">Discount</dt>
                 <dd class="col-sm-8">
-                    <span th:if="${booking.roundTripDiscountApplied}">
+                    <span th:if="${booking.roundTripDiscountApplied or booking.lastMinuteDiscountApplied}">
                         -
                         <span th:text="${#numbers.formatDecimal(booking.discountAmount, 1, 2)}">0.00</span>
+                        lei
+                        <span th:if="${booking.roundTripDiscountApplied}" class="badge bg-success ms-2">Tur-retur</span>
+                        <span th:if="${booking.lastMinuteDiscountApplied}" class="badge bg-warning text-dark ms-1">Last-minute</span>
                     </span>
-                    <span th:unless="${booking.roundTripDiscountApplied}" class="text-muted">Nu se aplica</span>
+                    <span th:unless="${booking.roundTripDiscountApplied or booking.lastMinuteDiscountApplied}" class="text-muted">Nu se aplica</span>
                 </dd>
 
-                <dt class="col-sm-4">Total de plata</dt>
-                <dd class="col-sm-8 fw-semibold">
-                    <span th:text="${#numbers.formatDecimal(booking.totalPrice, 1, 2)}">0.00</span>
+                <dt class="col-sm-4 border-top pt-2">Total de plata</dt>
+                <dd class="col-sm-8 fw-bold border-top pt-2">
+                    <span th:text="${#numbers.formatDecimal(booking.totalPrice, 1, 2)}">0.00</span> lei
                 </dd>
             </dl>
 
