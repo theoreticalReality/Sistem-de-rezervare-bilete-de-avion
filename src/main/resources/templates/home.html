@@ -21,18 +21,25 @@
 <main class="container py-5">
     <div class="mb-4">
         <h1 class="h2">Panou principal</h1>
-        <p class="text-muted mb-0">Alege zona pe care vrei să o controlezi.</p>
+        <p class="text-muted mb-0">Alege zona pe care vrei sa o controlezi.</p>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-4 mt-1">
         <div class="col-md-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h2 class="h4">Pasageri</h2>
                     <p class="text-muted">Cautare zboruri si rezervare bilete fara cont.</p>
-                    <div class="d-flex gap-2 flex-wrap">
+                    <div class="d-flex gap-2 flex-wrap mb-3">
                         <a th:href="@{/flights/search}" class="btn btn-success">Cauta zboruri</a>
                     </div>
+                    <hr>
+                    <h3 class="h6">Verifică Rezervarea</h3>
+                    <p class="small text-muted">Vezi statusul plății cash.</p>
+                    <form th:action="@{/bookings/lookup}" method="get" class="d-flex gap-1">
+                        <input type="text" name="bookingId" class="form-control form-control-sm" placeholder="ex: BK-12345678" required>
+                        <button type="submit" class="btn btn-outline-success btn-sm">Verifică</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -40,11 +47,10 @@
         <div class="col-md-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h2 class="h4">Companie aeriană</h2>
-                    <p class="text-muted">Administrare zboruri: adăugare, editare și ștergere curse.</p>
+                    <h2 class="h4">Companie aeriana</h2>
+                    <p class="text-muted">Administrare zboruri: adaugare, editare si stergere curse.</p>
                     <div class="d-flex gap-2 flex-wrap">
                         <a th:href="@{/login}" class="btn btn-primary">Login companie</a>
-                        <a th:if="${companyLoggedIn}" th:href="@{/dashboard}" class="btn btn-outline-primary">Dashboard companie</a>
                     </div>
                 </div>
             </div>
@@ -54,27 +60,10 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h2 class="h4">Personal aeroport</h2>
-                    <p class="text-muted">Vizualizare rezervări pentru un zbor și validare plăți cash.</p>
+                    <p class="text-muted">Vizualizare rezervari pentru un zbor si validare plati cash.</p>
                     <div class="d-flex gap-2 flex-wrap">
                         <a th:href="@{/staff/login}" class="btn btn-dark">Login personal</a>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card shadow-sm mt-4">
-        <div class="card-body">
-            <h2 class="h5">Date de test</h2>
-            <div class="row">
-                <div class="col-md-6">
-                    <strong>Companie aeriană</strong>
-                    <div>Email: admin@companie.com</div>
-                    <div>Parolă: parola123</div>
-                </div>
-                <div class="col-md-6">
-                    <strong>Personal aeroport</strong>
-                    <div>Cod personal: STAFF123</div>
                 </div>
             </div>
         </div>

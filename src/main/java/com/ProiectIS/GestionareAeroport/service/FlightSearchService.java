@@ -31,7 +31,7 @@ public class FlightSearchService {
             throw new BadRequestException("Locul de plecare si destinatia sunt obligatorii.");
         }
         if (query.getDepartureDate() == null) {
-            throw new BadRequestException("Data plecării este obligatorie.");
+            throw new BadRequestException("Data plecarii este obligatorie.");
         }
 
         if (query.getNumberOfPassengers() == null || query.getNumberOfPassengers() <= 0) {
@@ -48,10 +48,10 @@ public class FlightSearchService {
         List<FlightDto> returnFlights = Collections.emptyList();
         if (Boolean.TRUE.equals(query.getWantsReturn())) {
             if (query.getReturnDate() == null) {
-                throw new BadRequestException("Data întoarcerii este obligatorie pentru zbor dus-întors.");
+                throw new BadRequestException("Data intoarcerii este obligatorie pentru zbor dus-intors.");
             }
             if (query.getReturnDate().isBefore(query.getDepartureDate())) {
-                throw new BadRequestException("Data întoarcerii nu poate fi înainte de plecare.");
+                throw new BadRequestException("Data intoarcerii nu poate fi inainte de plecare.");
             }
             returnFlights = findMatchingFlights(
                     query.getDestinationCity(),
@@ -68,6 +68,7 @@ public class FlightSearchService {
         List<Flight> candidates = flightRepository
                 .findByDepartureCityIgnoreCaseAndDestinationCityIgnoreCase(from, to);
         return candidates.stream()
+                .filter(f -> !f.isCancelled())
                 .filter(f -> f.isAvailableOn(date))
                 .filter(f -> hasEnoughSeats(f, passengerCount))
                 .map(f -> FlightDto.fromEntity(f, date))
@@ -78,6 +79,41 @@ public class FlightSearchService {
         if (passengerCount == null || passengerCount <= 0) return true;
         return flight.getSeats().values().stream()
                 .anyMatch(s -> s != null && s >= passengerCount);
+    }
+
+    public List<String> getAvailableDepartureCities() {
+        return flightRepository.findAll().stream()
+                .map(f -> f.getDepartureCity().toLowerCase())
+                .distinct()
+                .toList();
+    }
+
+    public List<String> getAvailableDestinations(String from) {
+        if (isBlank(from)) return List.of();
+        return flightRepository.findAll().stream()
+                .filter(f -> f.getDepartureCity().equalsIgnoreCase(from.trim()))
+                .map(f -> f.getDestinationCity().toLowerCase())
+                .distinct()
+                .toList();
+    }
+
+    public List<java.time.LocalDate> getAvailableDates(String from, String to) {
+        if (isBlank(from) || isBlank(to)) return List.of();
+        
+        List<Flight> flights = flightRepository.findByDepartureCityIgnoreCaseAndDestinationCityIgnoreCase(from.trim(), to.trim());
+        List<java.time.LocalDate> dates = new java.util.ArrayList<>();
+        
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate limit = today.plusMonths(6);
+
+        for (java.time.LocalDate date = today; !date.isAfter(limit); date = date.plusDays(1)) {
+            final java.time.LocalDate currentDate = date;
+            boolean hasFlight = flights.stream().anyMatch(f -> !f.isCancelled() && f.isAvailableOn(currentDate));
+            if (hasFlight) {
+                dates.add(currentDate);
+            }
+        }
+        return dates;
     }
 
     private boolean isBlank(String value) {

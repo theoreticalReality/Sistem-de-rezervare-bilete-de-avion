@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>Cautare zboruri - Portal Aeroport</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .available-date { background-color: #d4edda !important; font-weight: bold; border-radius: 50%; }
+        .unavailable-date { color: #ccc !important; pointer-events: none; }
+    </style>
 </head>
 <body class="bg-light">
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -31,26 +35,29 @@
 
                 <div class="col-md-3">
                     <label class="form-label">Plecare</label>
-                    <input type="text" name="departureCity" class="form-control"
-                           th:value="${query.departureCity}" required>
+                    <select name="departureCity" id="departureCity" class="form-select" required>
+                        <option value="">Alege orasul...</option>
+                    </select>
                 </div>
 
                 <div class="col-md-3">
                     <label class="form-label">Destinatie</label>
-                    <input type="text" name="destinationCity" class="form-control"
-                           th:value="${query.destinationCity}" required>
+                    <select name="destinationCity" id="destinationCity" class="form-select" required disabled>
+                        <option value="">Alege destinatia...</option>
+                    </select>
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label">Data tur</label>
-                    <input type="date" name="departureDate" class="form-control"
-                           th:value="${query.departureDate}" required>
+                    <select name="departureDate" id="departureDate" class="form-select" required disabled>
+                        <option value="">Alege data...</option>
+                    </select>
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label">Persoane</label>
                     <input type="number" name="numberOfPassengers" class="form-control"
-                           min="1" th:value="${query.numberOfPassengers}" required>
+                           min="1" th:value="${query.numberOfPassengers != null ? query.numberOfPassengers : 1}" required>
                 </div>
 
                 <div class="col-md-2">
@@ -59,12 +66,13 @@
                                name="wantsReturn" value="true" th:checked="${query.wantsReturn}">
                         <label class="form-check-label" for="wantsReturn">Retur</label>
                     </div>
-                    <input type="date" id="returnDate" name="returnDate" class="form-control"
-                           th:value="${query.returnDate}">
+                    <select id="returnDate" name="returnDate" class="form-select" disabled>
+                        <option value="">Alege data retur...</option>
+                    </select>
                 </div>
 
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Cauta</button>
+                    <button type="submit" class="btn btn-primary" id="searchBtn" disabled>Cauta</button>
                 </div>
             </form>
         </div>
@@ -93,8 +101,8 @@
                             <th>Ruta</th>
                             <th>Plecare</th>
                             <th>Business</th>
-                            <th>First</th>
-                            <th>Economy</th>
+                            <th>Clasa 1</th>
+                            <th>Economie</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -147,8 +155,8 @@
                             <th>Ruta</th>
                             <th>Plecare</th>
                             <th>Business</th>
-                            <th>First</th>
-                            <th>Economy</th>
+                            <th>Clasa 1</th>
+                            <th>Economie</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -187,17 +195,111 @@
     </form>
 </main>
 
-<script>
-    const wantsReturn = document.getElementById('wantsReturn');
-    const returnDate = document.getElementById('returnDate');
+<script th:inline="javascript">
+    const departureCitySelect = document.getElementById('departureCity');
+    const destinationCitySelect = document.getElementById('destinationCity');
+    const departureDateSelect = document.getElementById('departureDate');
+    const returnDateSelect = document.getElementById('returnDate');
+    const wantsReturnCheckbox = document.getElementById('wantsReturn');
+    const searchBtn = document.getElementById('searchBtn');
 
-    function syncReturnDate() {
-        returnDate.disabled = !wantsReturn.checked;
-        returnDate.required = wantsReturn.checked;
+    const initialQuery = {
+        from:  '',
+        to:  '',
+        date:  '',
+        returnDate:  ''
+    };
+
+    async function loadDepartureCities() {
+        const response = await fetch('/api/flights/cities/departure');
+        const cities = await response.json();
+        departureCitySelect.innerHTML = '<option value="">Alege orasul...</option>' + 
+            cities.map(c => `<option value="${c}" ${initialQuery.from === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('');
+        
+        if (initialQuery.from) {
+            loadDestinations();
+        }
     }
 
-    wantsReturn.addEventListener('change', syncReturnDate);
-    syncReturnDate();
+    async function loadDestinations() {
+        const from = departureCitySelect.value;
+        if (!from) {
+            destinationCitySelect.disabled = true;
+            departureDateSelect.disabled = true;
+            returnDateSelect.disabled = true;
+            return;
+        }
+
+        const response = await fetch(`/api/flights/cities/destination?from=${from}`);
+        const cities = await response.json();
+        destinationCitySelect.disabled = false;
+        destinationCitySelect.innerHTML = '<option value="">Alege destinatia...</option>' + 
+            cities.map(c => `<option value="${c}" ${initialQuery.to === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('');
+        
+        if (initialQuery.to) {
+            loadDates();
+        }
+    }
+
+    async function loadDates() {
+        const from = departureCitySelect.value;
+        const to = destinationCitySelect.value;
+        if (!from || !to) {
+            departureDateSelect.disabled = true;
+            returnDateSelect.disabled = true;
+            return;
+        }
+
+        const response = await fetch(`/api/flights/available-dates?from=${from}&to=${to}`);
+        const dates = await response.json(); 
+        
+        const dateOptions = dates.map(d => {
+            const dateObj = new Date(d);
+            const formatted = dateObj.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            return `<option value="${d}" ${initialQuery.date === d ? 'selected' : ''}>${formatted}</option>`;
+        });
+
+        departureDateSelect.disabled = false;
+        departureDateSelect.innerHTML = '<option value="">Alege data...</option>' + dateOptions.join('');
+
+        
+        const returnResponse = await fetch(`/api/flights/available-dates?from=${to}&to=${from}`);
+        const returnDates = await returnResponse.json();
+        
+        const returnDateOptions = returnDates.map(d => {
+            const dateObj = new Date(d);
+            const formatted = dateObj.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            return `<option value="${d}" ${initialQuery.returnDate === d ? 'selected' : ''}>${formatted}</option>`;
+        });
+
+        returnDateSelect.innerHTML = '<option value="">Alege data retur...</option>' + returnDateOptions.join('');
+        syncReturnDateState();
+        checkSearchEnabled();
+    }
+
+    function syncReturnDateState() {
+        const enabled = wantsReturnCheckbox.checked && !destinationCitySelect.disabled;
+        returnDateSelect.disabled = !enabled;
+        returnDateSelect.required = enabled;
+    }
+
+    function checkSearchEnabled() {
+        const basicOk = departureCitySelect.value && destinationCitySelect.value && departureDateSelect.value;
+        const returnOk = !wantsReturnCheckbox.checked || returnDateSelect.value;
+        searchBtn.disabled = !(basicOk && returnOk);
+    }
+
+    departureCitySelect.addEventListener('change', loadDestinations);
+    destinationCitySelect.addEventListener('change', loadDates);
+    departureDateSelect.addEventListener('change', checkSearchEnabled);
+    returnDateSelect.addEventListener('change', checkSearchEnabled);
+    wantsReturnCheckbox.addEventListener('change', () => {
+        syncReturnDateState();
+        checkSearchEnabled();
+    });
+
+
+    loadDepartureCities();
 </script>
 </body>
 </html>
