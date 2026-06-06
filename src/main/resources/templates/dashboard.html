@@ -19,12 +19,13 @@
 
 <div class="container mt-4">
     <div th:if="${error != null and !#strings.isEmpty(error)}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success != null and !#strings.isEmpty(success)}" class="alert alert-success" th:text="${success}"></div>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Zborurile mele</h2>
         <div class="d-flex gap-2">
             <a th:href="@{/discount-policy}" class="btn btn-outline-primary">Politica discount</a>
-            <a th:href="@{/add-flight}" class="btn btn-success">Adaugă Zbor Nou</a>
+            <a th:href="@{/add-flight}" class="btn btn-success">Adauga Zbor Nou</a>
         </div>
     </div>
 
@@ -37,8 +38,9 @@
                     <th>Avion</th>
                     <th>Ruta</th>
                     <th>Tip</th>
+                    <th>Status</th>
                     <th>Orar</th>
-                    <th>Acțiuni</th>
+                    <th>Actiuni</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -51,25 +53,105 @@
                         <span th:if="${flight.type == 'SEASONAL'}" class="badge bg-warning text-dark">Sezonier</span>
                     </td>
                     <td>
-                        <span th:text="${flight.departureTime}">10:00</span>
-                        <span> - </span>
-                        <span th:text="${flight.arrivalTime}">12:00</span>
+                        <span th:if="${flight.cancelled}" class="badge bg-danger">Anulat</span>
+                        <span th:unless="${flight.cancelled}" class="badge bg-success">Activ</span>
+                    </td>
+                    <td>
+                        <div th:if="${flight.departureDateTime != null}"
+                             th:text="${#temporals.format(flight.departureDateTime, 'dd.MM.yyyy HH:mm')}">
+                            01.06.2026 10:00
+                        </div>
+                        <div th:unless="${flight.departureDateTime != null}">
+                            <span th:if="${flight.departureDate != null}"
+                                  th:text="${#temporals.format(flight.departureDate, 'dd.MM.yyyy') + ' '}"></span>
+                            <span th:text="${flight.departureTime}">10:00</span>
+                            <span> - </span>
+                            <span th:text="${flight.arrivalTime}">12:00</span>
+                        </div>
                         <div th:if="${flight.type == 'SEASONAL'}" class="small text-muted">
                             <span th:text="${flight.seasonStart}"></span> - <span th:text="${flight.seasonEnd}"></span>
                         </div>
                     </td>
                     <td>
-                        <a th:href="@{'/edit-flight/' + ${flight.flightCode}}" class="btn btn-primary btn-sm">Editează</a>
-                        <form th:action="@{'/delete-flight/' + ${flight.flightCode}}" method="post" onsubmit="return confirm('Ești sigur?')">
-                            <button type="submit" class="btn btn-danger btn-sm">Șterge</button>
-                        </form>
+                        <div class="d-flex flex-column gap-1">
+                            <a th:href="@{'/flights/' + ${flight.flightCode} + '/occupancy'}" class="btn btn-info btn-sm text-white">Ocupare/Pasageri</a>
+                            <a th:href="@{'/edit-flight/' + ${flight.flightCode}}" class="btn btn-primary btn-sm">Editeaza</a>
+                            <form th:if="${!flight.cancelled}" th:action="@{'/delete-flight/' + ${flight.flightCode}}" method="post" onsubmit="return confirm('Esti sigur? Daca exista rezervari, zborul va fi anulat si pastrat in istoric.')">
+                                <button type="submit" class="btn btn-danger btn-sm w-100"
+                                        th:text="'Anuleaza/Sterge'">Anuleaza/Sterge</button>
+                            </form>
+                            <span th:if="${flight.cancelled}" class="text-muted small text-center">Pastrat in istoric</span>
+                        </div>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(flights)}">
-                    <td colspan="6" class="text-center py-4">Nu există zboruri înregistrate.</td>
+                    <td colspan="6" class="text-center py-4">Nu exista zboruri inregistrate.</td>
                 </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <h3 class="h5 mb-3">Rezervari pentru zborurile mele</h3>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Zboruri</th>
+                        <th>Clasa</th>
+                        <th>Pasageri</th>
+                        <th>Plata</th>
+                        <th>Total</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="booking : ${bookings}">
+                        <td th:text="${booking.bookingId}">BK-123</td>
+                        <td>
+                            <div>
+                                Tur:
+                                <span th:text="${booking.outboundFlightCode}">FL001</span>
+                            </div>
+                            <div th:if="${booking.returnFlightCode != null}" class="text-muted">
+                                Retur:
+                                <span th:text="${booking.returnFlightCode}">FL002</span>
+                            </div>
+                        </td>
+                        <td th:text="${booking.selectedClass}">ECONOMY</td>
+                        <td>
+                            <div class="fw-semibold">
+                                <span th:text="${booking.totalPassengers}">1</span>
+                                pasageri
+                            </div>
+                            <div th:each="passenger : ${booking.passengerDetails}" class="small">
+                                <span class="badge bg-light text-dark border" th:text="${passenger.type}">ADULT</span>
+                                <span th:text="${passenger.name}">Nume</span>
+                                <span th:if="${passenger.phoneNumber != null}" class="text-muted"
+                                      th:text="' | tel: ' + ${passenger.phoneNumber}"></span>
+                                <span th:if="${passenger.email != null}" class="text-muted"
+                                      th:text="' | email: ' + ${passenger.email}"></span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary" th:text="${booking.paymentMethod}">CARD</span>
+                            <span class="badge"
+                                  th:classappend="${booking.paymentStatus.name() == 'CONFIRMED'} ? ' bg-success' : ' bg-warning text-dark'"
+                                  th:text="${booking.paymentStatus}">CONFIRMED</span>
+                        </td>
+                        <td>
+                            <span th:text="${#numbers.formatDecimal(booking.totalPrice, 1, 2)}">0.00</span>
+                            lei
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(bookings)}">
+                        <td colspan="6" class="text-center py-4">Nu exista rezervari pentru zborurile acestei companii.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

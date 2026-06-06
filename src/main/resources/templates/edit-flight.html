@@ -26,8 +26,8 @@
             <form th:if="${isRegular}" th:action="@{'/edit-regular-flight/' + ${currentFlightCode}}" method="post">
                 <div th:replace="~{this :: commonFields}"></div>
                 <div th:replace="~{this :: daysField}"></div>
-                <button type="submit" class="btn btn-primary">Salvează modificările</button>
-                <a th:href="@{/dashboard}" class="btn btn-secondary">Anulează</a>
+                <button type="submit" class="btn btn-primary">Salveaza modificarile</button>
+                <a th:href="@{/dashboard}" class="btn btn-secondary">Anuleaza</a>
             </form>
 
             <form th:if="${isSeasonal}" th:action="@{'/edit-seasonal-flight/' + ${currentFlightCode}}" method="post">
@@ -35,16 +35,16 @@
                 <div th:replace="~{this :: daysField}"></div>
                 <div class="row mb-3">
                     <div class="col-md-3">
-                        <label class="form-label">Început Sezon (LL-ZZ)</label>
+                        <label class="form-label">Inceput Sezon (LL-ZZ)</label>
                         <input type="text" name="seasonStartStr" class="form-control" th:value="${seasonStartStr}" placeholder="06-01" required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Sfârșit Sezon (LL-ZZ)</label>
+                        <label class="form-label">Sfarsit Sezon (LL-ZZ)</label>
                         <input type="text" name="seasonEndStr" class="form-control" th:value="${seasonEndStr}" placeholder="08-31" required>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Salvează modificările</button>
-                <a th:href="@{/dashboard}" class="btn btn-secondary">Anulează</a>
+                <button type="submit" class="btn btn-primary">Salveaza modificarile</button>
+                <a th:href="@{/dashboard}" class="btn btn-secondary">Anuleaza</a>
             </form>
         </div>
     </div>
@@ -52,30 +52,37 @@
 
 <div th:fragment="commonFields">
     <div class="row mb-3">
-        <div class="col-md-3">
-            <label class="form-label">Cod Cursă</label>
+        <div class="col-md-2">
+            <label class="form-label">Cod Cursa</label>
             <input type="text" name="flightCode" class="form-control" th:value="${flight.flightCode}" required>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label class="form-label">Model Avion</label>
             <input type="text" name="airplaneModel" class="form-control" th:value="${flight.airplaneModel}" required>
         </div>
         <div class="col-md-3">
-            <label class="form-label">Ora Plecare</label>
-            <input type="time" name="departureTime" class="form-control" th:value="${departureTime}" required>
+            <label class="form-label">Data Plecare</label>
+            <input type="date" name="departureDate" class="form-control departure-date-input"
+                   th:value="${flight.departureDate}" required>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Ora Plecare (HH:mm)</label>
+            <input type="text" name="departureTime" class="form-control" th:value="${departureTime}" 
+                   placeholder="10:30" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" title="Format 24h (ex: 14:30)" required>
         </div>
         <div class="col-md-3">
-            <label class="form-label">Ora Sosire</label>
-            <input type="time" name="arrivalTime" class="form-control" th:value="${arrivalTime}" required>
+            <label class="form-label">Ora Sosire (HH:mm)</label>
+            <input type="text" name="arrivalTime" class="form-control" th:value="${arrivalTime}" 
+                   placeholder="12:45" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" title="Format 24h (ex: 14:30)" required>
         </div>
     </div>
     <div class="row mb-3">
         <div class="col-md-6">
-            <label class="form-label">Oraș Plecare</label>
+            <label class="form-label">Oras Plecare</label>
             <input type="text" name="departureCity" class="form-control" th:value="${flight.departureCity}" required>
         </div>
         <div class="col-md-6">
-            <label class="form-label">Destinație</label>
+            <label class="form-label">Destinatie</label>
             <input type="text" name="destinationCity" class="form-control" th:value="${flight.destinationCity}" required>
         </div>
     </div>
@@ -107,15 +114,114 @@
             <label class="form-label">Zile Operare</label>
             <select name="daysOfWeek" class="form-select" multiple required>
                 <option value="MONDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).MONDAY)}">Luni</option>
-                <option value="TUESDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).TUESDAY)}">Marți</option>
+                <option value="TUESDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).TUESDAY)}">Marti</option>
                 <option value="WEDNESDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).WEDNESDAY)}">Miercuri</option>
                 <option value="THURSDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).THURSDAY)}">Joi</option>
                 <option value="FRIDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).FRIDAY)}">Vineri</option>
-                <option value="SATURDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).SATURDAY)}">Sâmbătă</option>
-                <option value="SUNDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).SUNDAY)}">Duminică</option>
+                <option value="SATURDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).SATURDAY)}">Sambata</option>
+                <option value="SUNDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).SUNDAY)}">Duminica</option>
             </select>
         </div>
     </div>
 </div>
+<script>
+    function validateTimes(event) {
+        const form = event instanceof Event ? event.target : event;
+        const departureTimeInput = form.querySelector('input[name="departureTime"]');
+        const arrivalTimeInput = form.querySelector('input[name="arrivalTime"]');
+
+        if (departureTimeInput && arrivalTimeInput) {
+            const departureStr = departureTimeInput.value;
+            const arrivalStr = arrivalTimeInput.value;
+            if (departureStr && arrivalStr) {
+                const [depH, depM] = departureStr.split(':').map(Number);
+                const [arrH, arrM] = arrivalStr.split(':').map(Number);
+                
+                const depMinutes = depH * 60 + depM;
+                const arrMinutes = arrH * 60 + arrM;
+                
+                let duration = arrMinutes - depMinutes;
+                if (duration <= 0) {
+                    duration += 24 * 60;
+                }
+
+                if (depMinutes === arrMinutes) {
+                    alert("Ora de sosire nu poate fi identica cu cea de plecare!");
+                    if (event instanceof Event) event.preventDefault();
+                    return false;
+                }
+
+                if (duration > 1140) {
+                    alert("Durata zborului este prea mare (>19h). Verifica orele!");
+                    if (event instanceof Event) event.preventDefault();
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    function validateSeason(event) {
+        const form = event.target;
+        const startInput = form.querySelector('input[name="seasonStartStr"]');
+        const endInput = form.querySelector('input[name="seasonEndStr"]');
+        const dateInput = form.querySelector('.departure-date-input');
+
+        if (startInput && endInput && dateInput && dateInput.value) {
+            const date = dateInput.value; 
+            const monthDay = date.substring(5); 
+            const start = startInput.value;
+            const end = endInput.value;
+
+            let isInSeason = false;
+            if (start <= end) {
+                isInSeason = (monthDay >= start && monthDay <= end);
+            } else {
+                isInSeason = (monthDay >= start || monthDay <= end);
+            }
+
+            if (!isInSeason) {
+                alert("Atentie: Data de plecare (" + monthDay + ") este in afara sezonului selectat (" + start + " - " + end + ")!");
+                event.preventDefault();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    
+    const dayMap = {
+        0: 'SUNDAY', 1: 'MONDAY', 2: 'TUESDAY', 3: 'WEDNESDAY',
+        4: 'THURSDAY', 5: 'FRIDAY', 6: 'SATURDAY'
+    };
+
+    document.querySelectorAll('.departure-date-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const dateVal = this.value;
+            if (!dateVal) return;
+
+            const dateParts = dateVal.split('-');
+            const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            const dayName = dayMap[date.getDay()];
+
+            const form = this.closest('form');
+            const select = form.querySelector('select[name="daysOfWeek"]');
+            if (select) {
+                for (let opt of select.options) {
+                    if (opt.value === dayName) {
+                        opt.selected = true;
+                    }
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!validateTimes(e)) return;
+            validateSeason(e);
+        });
+    });
+</script>
 </body>
 </html>
