@@ -170,7 +170,6 @@ public class BookingService {
     private Flight loadFlight(Long id) {
         Flight flight = flightRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Zborul nu exista: " + id));
-        // Force initialization of airline to avoid LazyInitializationException outside transaction
         if (flight.getAirline() != null) {
             flight.getAirline().getName();
         }
