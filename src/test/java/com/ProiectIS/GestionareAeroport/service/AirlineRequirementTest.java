@@ -151,6 +151,61 @@ class AirlineRequirementTest {
     }
 
     @Test
+    void addRegularFlightRejectsDurationLongerThan19Hours() {
+        CreateRegularFlightRequest request = regularRequest("RO-LONG");
+        request.setDepartureTime(LocalTime.of(10, 0));
+        request.setArrivalTime(LocalTime.of(6, 0));
+
+        assertThatThrownBy(() -> flightService.addRegularFlight(1L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Durata zborului este prea mare (>19h)");
+    }
+
+    @Test
+    void addRegularFlightRejectsSameArrivalAndDepartureTime() {
+        CreateRegularFlightRequest request = regularRequest("RO-SAME");
+        request.setDepartureTime(LocalTime.of(10, 0));
+        request.setArrivalTime(LocalTime.of(10, 0));
+
+        assertThatThrownBy(() -> flightService.addRegularFlight(1L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Ora de sosire nu poate fi identica");
+    }
+
+    @Test
+    void addRegularFlightRejectsNegativeSeats() {
+        CreateRegularFlightRequest request = regularRequest("RO-NEG");
+        request.getSeats().put(ClassType.ECONOMY, -5);
+
+        assertThatThrownBy(() -> flightService.addRegularFlight(1L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("pozitiv sau zero");
+    }
+
+    @Test
+    void addSeasonalFlightRejectsDepartureDateOutsideSeason() {
+        CreateSeasonalFlightRequest request = seasonalRequest("SN-OUT");
+        request.setDepartureDate(java.time.LocalDate.of(2026, 12, 1));
+        request.setSeasonStart(MonthDay.of(6, 1));
+        request.setSeasonEnd(MonthDay.of(8, 31));
+
+        assertThatThrownBy(() -> flightService.addSeasonalFlight(1L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("in afara sezonului");
+    }
+
+    @Test
+    void addRegularFlightRejectsNullDepartureTime() {
+        AirlineCompany company = airline(10L, "AIR-10", "air10@test.ro", "hash");
+        CreateRegularFlightRequest request = regularRequest("RO-NULL");
+        request.setDepartureTime(null);
+        when(airlineRepository.findById(10L)).thenReturn(Optional.of(company));
+        
+        flightService.addRegularFlight(10L, request); 
+        verify(flightRepository).save(any());
+    }
+
+    @Test
     void removeFlightDeletesOnlyFlightOwnedByAirline() {
         RegularFlight flight = new RegularFlight();
         flight.setFlightCode("RO101");

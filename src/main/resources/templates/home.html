@@ -34,11 +34,11 @@
                         <a th:href="@{/flights/search}" class="btn btn-success">Cauta zboruri</a>
                     </div>
                     <hr>
-                    <h3 class="h6">Verifică Rezervarea</h3>
-                    <p class="small text-muted">Vezi statusul plății cash.</p>
+                    <h3 class="h6">Verifica Rezervarea</h3>
+                    <p class="small text-muted">Vezi statusul platii cash.</p>
                     <form th:action="@{/bookings/lookup}" method="get" class="d-flex gap-1">
                         <input type="text" name="bookingId" class="form-control form-control-sm" placeholder="ex: BK-12345678" required>
-                        <button type="submit" class="btn btn-outline-success btn-sm">Verifică</button>
+                        <button type="submit" class="btn btn-outline-success btn-sm">Verifica</button>
                     </form>
                 </div>
             </div>

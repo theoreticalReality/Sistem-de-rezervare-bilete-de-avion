@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -144,6 +145,56 @@ class StaffRequirementTest {
 
         assertThatThrownBy(() -> bookingService.confirmCashPayment("BK-MISSING"))
                 .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void confirmCashPaymentVerifiesRepositorySaveIsCalled() {
+        Booking booking = booking("BK-SAVE", "RO101", null, PaymentMethod.CASH, PaymentStatus.PENDING);
+        when(bookingRepository.findByBookingId("BK-SAVE")).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+
+        bookingService.confirmCashPayment("BK-SAVE");
+
+        verify(bookingRepository).save(booking);
+    }
+
+    @Test
+    void confirmCashPaymentRejectsNullBookingId() {
+        assertThatThrownBy(() -> bookingService.confirmCashPayment(null))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void confirmCashPaymentHandlesCancelledBookingsIfTheyExist() {
+        Booking booking = booking("BK-CANCEL", "RO101", null, PaymentMethod.CASH, PaymentStatus.PENDING);
+        booking.setPaymentStatus(PaymentStatus.CONFIRMED); 
+        when(bookingRepository.findByBookingId("BK-CANCEL")).thenReturn(Optional.of(booking));
+
+        assertThatThrownBy(() -> bookingService.confirmCashPayment("BK-CANCEL"))
+                .isInstanceOf(BadRequestException.class);
+    }
+
+    @Test
+    void confirmCashPaymentChangesStatusToConfirmedOnly() {
+        Booking booking = booking("BK-STATUS", "RO101", null, PaymentMethod.CASH, PaymentStatus.PENDING);
+        when(bookingRepository.findByBookingId("BK-STATUS")).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(i -> i.getArgument(0));
+
+        Booking result = bookingService.confirmCashPayment("BK-STATUS");
+
+        assertThat(result.getPaymentStatus()).isEqualTo(PaymentStatus.CONFIRMED);
+    }
+
+    @Test
+    void confirmCashPaymentWorksForBookingsWithReturnFlight() {
+        Booking booking = booking("BK-RET-CASH", "RO101", "RO102", PaymentMethod.CASH, PaymentStatus.PENDING);
+        when(bookingRepository.findByBookingId("BK-RET-CASH")).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+
+        Booking result = bookingService.confirmCashPayment("BK-RET-CASH");
+
+        assertThat(result.getBookingId()).isEqualTo("BK-RET-CASH");
+        assertThat(result.getPaymentStatus()).isEqualTo(PaymentStatus.CONFIRMED);
     }
 
     private StaffLoginRequest staffLogin(String personalCode) {
