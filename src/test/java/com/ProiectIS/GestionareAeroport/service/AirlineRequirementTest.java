@@ -11,6 +11,7 @@ import com.ProiectIS.GestionareAeroport.model.RegularFlight;
 import com.ProiectIS.GestionareAeroport.model.SeasonalFlight;
 import com.ProiectIS.GestionareAeroport.model.enums.ClassType;
 import com.ProiectIS.GestionareAeroport.repository.AirlineCompanyRepository;
+import com.ProiectIS.GestionareAeroport.repository.BookingRepository;
 import com.ProiectIS.GestionareAeroport.repository.FlightRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +43,8 @@ class AirlineRequirementTest {
     private final AirlineCompanyService airlineCompanyService = new AirlineCompanyService(airlineRepository, passwordEncoder);
 
     private final FlightRepository flightRepository = mock(FlightRepository.class);
-    private final FlightService flightService = new FlightService(flightRepository, airlineCompanyService);
+    private final BookingRepository bookingRepository = mock(BookingRepository.class);
+    private final FlightService flightService = new FlightService(flightRepository, airlineCompanyService, bookingRepository);
 
     @Test
     void airlineCanLoginWithEmailAndCorrectPassword() {
