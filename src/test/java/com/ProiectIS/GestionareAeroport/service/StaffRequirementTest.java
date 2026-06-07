@@ -191,7 +191,6 @@ class StaffRequirementTest {
         flight.setAirplaneModel("Boeing 737");
         flight.setDepartureCity("Bucuresti");
         flight.setDestinationCity("Paris");
-        flight.setDepartureDate(java.time.LocalDate.of(2026, 6, 1));
         return flight;
     }
 }
