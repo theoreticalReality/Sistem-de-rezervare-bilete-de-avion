@@ -419,7 +419,7 @@ public class PortalController {
     public String addRegularFlight(@ModelAttribute CreateRegularFlightRequest request,
                                    @RequestParam Map<String, String> allParams,
                                    HttpSession session,
-                                   RedirectAttributes redirectAttributes) {
+                                   Model model) {
         AirlineCompany company = (AirlineCompany) session.getAttribute("loggedInCompany");
         if (company == null) return "redirect:/login";
 
@@ -427,13 +427,13 @@ public class PortalController {
             Map<ClassType, Integer> seats = new HashMap<>();
             Map<ClassType, Double> prices = new HashMap<>();
 
-            seats.put(ClassType.BUSINESS, Integer.parseInt(allParams.get("seats_BUSINESS")));
-            seats.put(ClassType.FIRST_CLASS, Integer.parseInt(allParams.get("seats_FIRST")));
-            seats.put(ClassType.ECONOMY, Integer.parseInt(allParams.get("seats_ECONOMY")));
+            seats.put(ClassType.BUSINESS, Integer.parseInt(allParams.getOrDefault("seats_BUSINESS", "0")));
+            seats.put(ClassType.FIRST_CLASS, Integer.parseInt(allParams.getOrDefault("seats_FIRST", "0")));
+            seats.put(ClassType.ECONOMY, Integer.parseInt(allParams.getOrDefault("seats_ECONOMY", "0")));
 
-            prices.put(ClassType.BUSINESS, Double.parseDouble(allParams.get("prices_BUSINESS")));
-            prices.put(ClassType.FIRST_CLASS, Double.parseDouble(allParams.get("prices_FIRST")));
-            prices.put(ClassType.ECONOMY, Double.parseDouble(allParams.get("prices_ECONOMY")));
+            prices.put(ClassType.BUSINESS, Double.parseDouble(allParams.getOrDefault("prices_BUSINESS", "0.0")));
+            prices.put(ClassType.FIRST_CLASS, Double.parseDouble(allParams.getOrDefault("prices_FIRST", "0.0")));
+            prices.put(ClassType.ECONOMY, Double.parseDouble(allParams.getOrDefault("prices_ECONOMY", "0.0")));
 
             request.setSeats(seats);
             request.setPrices(prices);
@@ -441,8 +441,12 @@ public class PortalController {
             flightService.addRegularFlight(company.getId(), request);
             return "redirect:/dashboard";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/add-flight";
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("regularRequest", request);
+            if (!model.containsAttribute("seasonalRequest")) {
+                model.addAttribute("seasonalRequest", new CreateSeasonalFlightRequest());
+            }
+            return "add-flight";
         }
     }
 
@@ -450,7 +454,7 @@ public class PortalController {
     public String addSeasonalFlight(@ModelAttribute CreateSeasonalFlightRequest request,
                                     @RequestParam Map<String, String> allParams,
                                     HttpSession session,
-                                    RedirectAttributes redirectAttributes) {
+                                    Model model) {
         AirlineCompany company = (AirlineCompany) session.getAttribute("loggedInCompany");
         if (company == null) return "redirect:/login";
 
@@ -458,16 +462,22 @@ public class PortalController {
             Map<ClassType, Integer> seats = new HashMap<>();
             Map<ClassType, Double> prices = new HashMap<>();
 
-            seats.put(ClassType.BUSINESS, Integer.parseInt(allParams.get("seats_BUSINESS")));
-            seats.put(ClassType.FIRST_CLASS, Integer.parseInt(allParams.get("seats_FIRST")));
-            seats.put(ClassType.ECONOMY, Integer.parseInt(allParams.get("seats_ECONOMY")));
+            seats.put(ClassType.BUSINESS, Integer.parseInt(allParams.getOrDefault("seats_BUSINESS", "0")));
+            seats.put(ClassType.FIRST_CLASS, Integer.parseInt(allParams.getOrDefault("seats_FIRST", "0")));
+            seats.put(ClassType.ECONOMY, Integer.parseInt(allParams.getOrDefault("seats_ECONOMY", "0")));
 
-            prices.put(ClassType.BUSINESS, Double.parseDouble(allParams.get("prices_BUSINESS")));
-            prices.put(ClassType.FIRST_CLASS, Double.parseDouble(allParams.get("prices_FIRST")));
-            prices.put(ClassType.ECONOMY, Double.parseDouble(allParams.get("prices_ECONOMY")));
+            prices.put(ClassType.BUSINESS, Double.parseDouble(allParams.getOrDefault("prices_BUSINESS", "0.0")));
+            prices.put(ClassType.FIRST_CLASS, Double.parseDouble(allParams.getOrDefault("prices_FIRST", "0.0")));
+            prices.put(ClassType.ECONOMY, Double.parseDouble(allParams.getOrDefault("prices_ECONOMY", "0.0")));
             
-            request.setSeasonStart(MonthDay.parse("--" + allParams.get("seasonStartStr")));
-            request.setSeasonEnd(MonthDay.parse("--" + allParams.get("seasonEndStr")));
+            String startStr = allParams.get("seasonStartStr");
+            String endStr = allParams.get("seasonEndStr");
+            if (startStr != null && !startStr.isEmpty()) {
+                request.setSeasonStart(MonthDay.parse("--" + startStr));
+            }
+            if (endStr != null && !endStr.isEmpty()) {
+                request.setSeasonEnd(MonthDay.parse("--" + endStr));
+            }
 
             request.setSeats(seats);
             request.setPrices(prices);
@@ -475,8 +485,12 @@ public class PortalController {
             flightService.addSeasonalFlight(company.getId(), request);
             return "redirect:/dashboard";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/add-flight";
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("seasonalRequest", request);
+            if (!model.containsAttribute("regularRequest")) {
+                model.addAttribute("regularRequest", new CreateRegularFlightRequest());
+            }
+            return "add-flight";
         }
     }
 

@@ -33,7 +33,7 @@
 
             
             <form id="regularForm" th:action="@{/add-regular-flight}" th:object="${regularRequest}" method="post">
-                <div th:replace="~{this :: commonFields}"></div>
+                <div th:replace="~{this :: commonFields(${regularRequest})}"></div>
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Zile Operare (Luni, Marti...):</label>
@@ -55,7 +55,7 @@
 
             
             <form id="seasonalForm" th:action="@{/add-seasonal-flight}" th:object="${seasonalRequest}" method="post" style="display: none;">
-                <div th:replace="~{this :: commonFields}"></div>
+                <div th:replace="~{this :: commonFields(${seasonalRequest})}"></div>
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Zile Operare:</label>
@@ -72,11 +72,13 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Inceput Sezon (LL-ZZ):</label>
-                        <input type="text" name="seasonStartStr" class="form-control" placeholder="06-01" required>
+                        <input type="text" name="seasonStartStr" class="form-control" placeholder="06-01" 
+                               th:value="${#strings.isEmpty(seasonalRequest.seasonStart) ? param.seasonStartStr : seasonalRequest.seasonStart.toString().substring(2)}" required>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Sfarsit Sezon (LL-ZZ):</label>
-                        <input type="text" name="seasonEndStr" class="form-control" placeholder="08-31" required>
+                        <input type="text" name="seasonEndStr" class="form-control" placeholder="08-31" 
+                               th:value="${#strings.isEmpty(seasonalRequest.seasonEnd) ? param.seasonEndStr : seasonalRequest.seasonEnd.toString().substring(2)}" required>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-warning">Salveaza Zbor Sezonier</button>
@@ -87,61 +89,71 @@
 </div>
 
 
-<div th:fragment="commonFields">
-    <div class="row mb-3">
-        <div class="col-md-2">
-            <label class="form-label">Cod Cursa</label>
-            <input type="text" name="flightCode" class="form-control" required>
+<div th:remove="all">
+    <div th:fragment="commonFields(dto)">
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <label class="form-label">Cod Cursa</label>
+                <input type="text" name="flightCode" class="form-control" th:value="${dto.flightCode}" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Model Avion</label>
+                <input type="text" name="airplaneModel" class="form-control" th:value="${dto.airplaneModel}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Data Plecare</label>
+                <input type="date" name="departureDate" class="form-control departure-date-input" th:value="${dto.departureDate}" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Ora Plecare (HH:mm)</label>
+                <input type="text" name="departureTime" class="form-control time-input" placeholder="10:30" 
+                       pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" title="Format 24h (ex: 14:30)" 
+                       th:value="${dto.departureTime}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Ora Sosire (HH:mm)</label>
+                <input type="text" name="arrivalTime" class="form-control time-input" placeholder="12:45" 
+                       pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" title="Format 24h (ex: 14:30)" 
+                       th:value="${dto.arrivalTime}" required>
+                <div class="time-error text-danger small mt-1" style="display: none;">Ora de sosire trebuie sa fie dupa ora de plecare!</div>
+            </div>
         </div>
-        <div class="col-md-2">
-            <label class="form-label">Model Avion</label>
-            <input type="text" name="airplaneModel" class="form-control" required>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Oras Plecare</label>
+                <input type="text" name="departureCity" class="form-control" th:value="${dto.departureCity}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Destinatie</label>
+                <input type="text" name="destinationCity" class="form-control" th:value="${dto.destinationCity}" required>
+            </div>
         </div>
-        <div class="col-md-3">
-            <label class="form-label">Data Plecare</label>
-            <input type="date" name="departureDate" class="form-control departure-date-input" required>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">Ora Plecare (HH:mm)</label>
-            <input type="text" name="departureTime" class="form-control time-input" placeholder="10:30" 
-                   pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" title="Format 24h (ex: 14:30)" required>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Ora Sosire (HH:mm)</label>
-            <input type="text" name="arrivalTime" class="form-control time-input" placeholder="12:45" 
-                   pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" title="Format 24h (ex: 14:30)" required>
-            <div class="time-error text-danger small mt-1" style="display: none;">Ora de sosire trebuie sa fie dupa ora de plecare!</div>
-        </div>
-    </div>
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label class="form-label">Oras Plecare</label>
-            <input type="text" name="departureCity" class="form-control" required>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Destinatie</label>
-            <input type="text" name="destinationCity" class="form-control" required>
-        </div>
-    </div>
-    
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <label class="form-label">Locuri Business</label>
-            <input type="number" min="0" name="seats_BUSINESS" class="form-control" required>
-            <label class="form-label mt-1">Tarif Business</label>
-            <input type="number" min="0.01" step="0.01" name="prices_BUSINESS" class="form-control" required>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Locuri Clasa 1</label>
-            <input type="number" min="0" name="seats_FIRST" class="form-control" required>
-            <label class="form-label mt-1">Tarif Clasa 1</label>
-            <input type="number" min="0.01" step="0.01" name="prices_FIRST" class="form-control" required>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Locuri Economie</label>
-            <input type="number" min="0" name="seats_ECONOMY" class="form-control" required>
-            <label class="form-label mt-1">Tarif Economie</label>
-            <input type="number" min="0.01" step="0.01" name="prices_ECONOMY" class="form-control" required>
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Locuri Business</label>
+                <input type="number" min="0" name="seats_BUSINESS" class="form-control" 
+                       th:value="${dto.seats != null ? dto.seats.get(T(com.ProiectIS.GestionareAeroport.model.enums.ClassType).BUSINESS) : ''}" required>
+                <label class="form-label mt-1">Tarif Business</label>
+                <input type="number" min="0.01" step="0.01" name="prices_BUSINESS" class="form-control" 
+                       th:value="${dto.prices != null ? dto.prices.get(T(com.ProiectIS.GestionareAeroport.model.enums.ClassType).BUSINESS) : ''}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Locuri Clasa 1</label>
+                <input type="number" min="0" name="seats_FIRST" class="form-control" 
+                       th:value="${dto.seats != null ? dto.seats.get(T(com.ProiectIS.GestionareAeroport.model.enums.ClassType).FIRST_CLASS) : ''}" required>
+                <label class="form-label mt-1">Tarif Clasa 1</label>
+                <input type="number" min="0.01" step="0.01" name="prices_FIRST" class="form-control" 
+                       th:value="${dto.prices != null ? dto.prices.get(T(com.ProiectIS.GestionareAeroport.model.enums.ClassType).FIRST_CLASS) : ''}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Locuri Economie</label>
+                <input type="number" min="0" name="seats_ECONOMY" class="form-control" 
+                       th:value="${dto.seats != null ? dto.seats.get(T(com.ProiectIS.GestionareAeroport.model.enums.ClassType).ECONOMY) : ''}" required>
+                <label class="form-label mt-1">Tarif Economie</label>
+                <input type="number" min="0.01" step="0.01" name="prices_ECONOMY" class="form-control" 
+                       th:value="${dto.prices != null ? dto.prices.get(T(com.ProiectIS.GestionareAeroport.model.enums.ClassType).ECONOMY) : ''}" required>
+            </div>
         </div>
     </div>
 </div>

@@ -50,77 +50,79 @@
     </div>
 </div>
 
-<div th:fragment="commonFields">
-    <div class="row mb-3">
-        <div class="col-md-2">
-            <label class="form-label">Cod Cursa</label>
-            <input type="text" name="flightCode" class="form-control" th:value="${flight.flightCode}" required>
+<div th:remove="all">
+    <div th:fragment="commonFields">
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <label class="form-label">Cod Cursa</label>
+                <input type="text" name="flightCode" class="form-control" th:value="${flight.flightCode}" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Model Avion</label>
+                <input type="text" name="airplaneModel" class="form-control" th:value="${flight.airplaneModel}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Data Plecare</label>
+                <input type="date" name="departureDate" class="form-control departure-date-input"
+                       th:value="${flight.departureDate}" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Ora Plecare (HH:mm)</label>
+                <input type="text" name="departureTime" class="form-control" th:value="${departureTime}" 
+                       placeholder="10:30" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" title="Format 24h (ex: 14:30)" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Ora Sosire (HH:mm)</label>
+                <input type="text" name="arrivalTime" class="form-control" th:value="${arrivalTime}" 
+                       placeholder="12:45" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" title="Format 24h (ex: 14:30)" required>
+            </div>
         </div>
-        <div class="col-md-2">
-            <label class="form-label">Model Avion</label>
-            <input type="text" name="airplaneModel" class="form-control" th:value="${flight.airplaneModel}" required>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Oras Plecare</label>
+                <input type="text" name="departureCity" class="form-control" th:value="${flight.departureCity}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Destinatie</label>
+                <input type="text" name="destinationCity" class="form-control" th:value="${flight.destinationCity}" required>
+            </div>
         </div>
-        <div class="col-md-3">
-            <label class="form-label">Data Plecare</label>
-            <input type="date" name="departureDate" class="form-control departure-date-input"
-                   th:value="${flight.departureDate}" required>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">Ora Plecare (HH:mm)</label>
-            <input type="text" name="departureTime" class="form-control" th:value="${departureTime}" 
-                   placeholder="10:30" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" title="Format 24h (ex: 14:30)" required>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Ora Sosire (HH:mm)</label>
-            <input type="text" name="arrivalTime" class="form-control" th:value="${arrivalTime}" 
-                   placeholder="12:45" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" title="Format 24h (ex: 14:30)" required>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Locuri Business</label>
+                <input type="number" min="0" name="seats_BUSINESS" class="form-control" th:value="${seatsBusiness}" required>
+                <label class="form-label mt-1">Tarif Business</label>
+                <input type="number" min="0.01" step="0.01" name="prices_BUSINESS" class="form-control" th:value="${pricesBusiness}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Locuri Clasa 1</label>
+                <input type="number" min="0" name="seats_FIRST" class="form-control" th:value="${seatsFirst}" required>
+                <label class="form-label mt-1">Tarif Clasa 1</label>
+                <input type="number" min="0.01" step="0.01" name="prices_FIRST" class="form-control" th:value="${pricesFirst}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Locuri Economie</label>
+                <input type="number" min="0" name="seats_ECONOMY" class="form-control" th:value="${seatsEconomy}" required>
+                <label class="form-label mt-1">Tarif Economie</label>
+                <input type="number" min="0.01" step="0.01" name="prices_ECONOMY" class="form-control" th:value="${pricesEconomy}" required>
+            </div>
         </div>
     </div>
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label class="form-label">Oras Plecare</label>
-            <input type="text" name="departureCity" class="form-control" th:value="${flight.departureCity}" required>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Destinatie</label>
-            <input type="text" name="destinationCity" class="form-control" th:value="${flight.destinationCity}" required>
-        </div>
-    </div>
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <label class="form-label">Locuri Business</label>
-            <input type="number" min="0" name="seats_BUSINESS" class="form-control" th:value="${seatsBusiness}" required>
-            <label class="form-label mt-1">Tarif Business</label>
-            <input type="number" min="0.01" step="0.01" name="prices_BUSINESS" class="form-control" th:value="${pricesBusiness}" required>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Locuri Clasa 1</label>
-            <input type="number" min="0" name="seats_FIRST" class="form-control" th:value="${seatsFirst}" required>
-            <label class="form-label mt-1">Tarif Clasa 1</label>
-            <input type="number" min="0.01" step="0.01" name="prices_FIRST" class="form-control" th:value="${pricesFirst}" required>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Locuri Economie</label>
-            <input type="number" min="0" name="seats_ECONOMY" class="form-control" th:value="${seatsEconomy}" required>
-            <label class="form-label mt-1">Tarif Economie</label>
-            <input type="number" min="0.01" step="0.01" name="prices_ECONOMY" class="form-control" th:value="${pricesEconomy}" required>
-        </div>
-    </div>
-</div>
 
-<div th:fragment="daysField">
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label class="form-label">Zile Operare</label>
-            <select name="daysOfWeek" class="form-select" multiple required>
-                <option value="MONDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).MONDAY)}">Luni</option>
-                <option value="TUESDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).TUESDAY)}">Marti</option>
-                <option value="WEDNESDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).WEDNESDAY)}">Miercuri</option>
-                <option value="THURSDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).THURSDAY)}">Joi</option>
-                <option value="FRIDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).FRIDAY)}">Vineri</option>
-                <option value="SATURDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).SATURDAY)}">Sambata</option>
-                <option value="SUNDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).SUNDAY)}">Duminica</option>
-            </select>
+    <div th:fragment="daysField">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Zile Operare</label>
+                <select name="daysOfWeek" class="form-select" multiple required>
+                    <option value="MONDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).MONDAY)}">Luni</option>
+                    <option value="TUESDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).TUESDAY)}">Marti</option>
+                    <option value="WEDNESDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).WEDNESDAY)}">Miercuri</option>
+                    <option value="THURSDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).THURSDAY)}">Joi</option>
+                    <option value="FRIDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).FRIDAY)}">Vineri</option>
+                    <option value="SATURDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).SATURDAY)}">Sambata</option>
+                    <option value="SUNDAY" th:selected="${#lists.contains(daysOfWeek, T(java.time.DayOfWeek).SUNDAY)}">Duminica</option>
+                </select>
+            </div>
         </div>
     </div>
 </div>
