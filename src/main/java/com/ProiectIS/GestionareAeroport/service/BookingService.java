@@ -167,6 +167,25 @@ public class BookingService {
         return bookingRepository.save(booking);
     }
 
+    @Transactional
+    public Booking declineCashPayment(String bookingId) {
+        Booking booking = findByBookingId(bookingId);
+        if (booking.getPaymentMethod() != PaymentMethod.CASH) {
+            throw new BadRequestException("Doar platile cash pot fi refuzate manual.");
+        }
+        if (booking.getPaymentStatus() != PaymentStatus.PENDING) {
+            throw new BadRequestException("Aceasta rezervare nu este in asteptarea platii.");
+        }
+        booking.cancelPayment();
+        
+        incrementSeats(booking.getOutboundFlight(), booking.getSelectedClass(), booking.getPassenger().getTotalPassengerCount());
+        if (booking.getReturnFlight() != null) {
+            incrementSeats(booking.getReturnFlight(), booking.getSelectedClass(), booking.getPassenger().getTotalPassengerCount());
+        }
+        
+        return bookingRepository.save(booking);
+    }
+
     private Flight loadFlight(Long id) {
         Flight flight = flightRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Zborul nu exista: " + id));
@@ -192,6 +211,12 @@ public class BookingService {
     private void decrementSeats(Flight flight, ClassType classType, int passengerCount) {
         int remaining = flight.getAvailableSeats(classType) - passengerCount;
         flight.getSeats().put(classType, remaining);
+        flightRepository.save(flight);
+    }
+
+    private void incrementSeats(Flight flight, ClassType classType, int passengerCount) {
+        int updated = flight.getAvailableSeats(classType) + passengerCount;
+        flight.getSeats().put(classType, updated);
         flightRepository.save(flight);
     }
 

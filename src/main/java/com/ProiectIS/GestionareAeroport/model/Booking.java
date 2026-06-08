@@ -108,4 +108,8 @@ public class Booking {
     public void confirmPayment() {
         this.paymentStatus = PaymentStatus.CONFIRMED;
     }
+
+    public void cancelPayment() {
+        this.paymentStatus = PaymentStatus.CANCELLED;
+    }
 }

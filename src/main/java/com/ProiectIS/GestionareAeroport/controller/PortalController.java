@@ -321,6 +321,26 @@ public class PortalController {
         return "redirect:/staff/dashboard" + suffix;
     }
 
+    @PostMapping("/staff/bookings/{bookingId}/decline-payment")
+    public String staffDeclineCashPayment(@PathVariable String bookingId,
+                                          @RequestParam(required = false) String flightCode,
+                                          HttpSession session,
+                                          RedirectAttributes redirectAttributes) {
+        if (session.getAttribute("loggedInStaff") == null) {
+            return "redirect:/staff/login";
+        }
+
+        try {
+            bookingService.declineCashPayment(bookingId);
+            redirectAttributes.addFlashAttribute("success", "Plata cash a fost refuzata. Locurile au fost eliberate.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Eroare la refuzarea platii: " + e.getMessage());
+        }
+
+        String suffix = flightCode == null || flightCode.isBlank() ? "" : "?flightCode=" + flightCode.trim();
+        return "redirect:/staff/dashboard" + suffix;
+    }
+
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
         AirlineCompany company = (AirlineCompany) session.getAttribute("loggedInCompany");

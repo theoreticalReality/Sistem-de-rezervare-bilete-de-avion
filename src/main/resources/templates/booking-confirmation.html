@@ -18,7 +18,8 @@
 <main class="container py-5">
     <div class="card shadow-sm">
         <div class="card-body">
-            <h1 class="h3 mb-4">Rezervare confirmata</h1>
+            <h1 class="h3 mb-4" 
+                th:text="${booking.paymentStatus.name() == 'CANCELLED' ? 'Rezervare anulata/refuzata' : (booking.paymentStatus.name() == 'CONFIRMED' ? 'Rezervare confirmata' : 'Rezervare in asteptarea platii')}">Rezervare</h1>
 
             <dl class="row mb-0">
                 <dt class="col-sm-4">ID rezervare</dt>
@@ -80,8 +81,8 @@
                 <dd class="col-sm-8">
                     <span class="badge bg-secondary" th:text="${booking.paymentMethod}">CARD</span>
                     <span class="badge"
-                          th:classappend="${booking.paymentStatus.name() == 'CONFIRMED'} ? ' bg-success' : ' bg-warning text-dark'"
-                          th:text="${booking.paymentStatus.name() == 'CONFIRMED' ? 'CONFIRMATA' : 'IN ASTEPTARE'}">CONFIRMED</span>
+                          th:classappend="${booking.paymentStatus.name() == 'CONFIRMED'} ? ' bg-success' : (${booking.paymentStatus.name() == 'CANCELLED'} ? ' bg-danger' : ' bg-warning text-dark')"
+                          th:text="${booking.paymentStatus.name() == 'CONFIRMED' ? 'CONFIRMATA' : (booking.paymentStatus.name() == 'CANCELLED' ? 'REFUZATA/ANULATA' : 'IN ASTEPTARE')}">STATUS</span>
                 </dd>
 
                 <dt class="col-sm-4">Pret bilete</dt>

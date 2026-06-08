@@ -83,12 +83,16 @@
                     </td>
                     <td th:text="${#numbers.formatDecimal(booking.totalPrice, 1, 2)}">0.00</td>
                     <td>
-                        <form th:if="${booking.paymentMethod.name() == 'CASH' and booking.paymentStatus.name() == 'PENDING'}"
-                              th:action="@{'/staff/bookings/' + ${booking.bookingId} + '/confirm-payment'}"
-                              method="post">
-                            <input type="hidden" name="flightCode" th:value="${selectedFlightCode}">
-                            <button type="submit" class="btn btn-success btn-sm">Valideaza cash</button>
-                        </form>
+                        <div th:if="${booking.paymentMethod.name() == 'CASH' and booking.paymentStatus.name() == 'PENDING'}" class="d-flex gap-1">
+                            <form th:action="@{'/staff/bookings/' + ${booking.bookingId} + '/confirm-payment'}" method="post">
+                                <input type="hidden" name="flightCode" th:value="${selectedFlightCode}">
+                                <button type="submit" class="btn btn-success btn-sm">Valideaza cash</button>
+                            </form>
+                            <form th:action="@{'/staff/bookings/' + ${booking.bookingId} + '/decline-payment'}" method="post">
+                                <input type="hidden" name="flightCode" th:value="${selectedFlightCode}">
+                                <button type="submit" class="btn btn-danger btn-sm">Refuza cash</button>
+                            </form>
+                        </div>
                         <span th:unless="${booking.paymentMethod.name() == 'CASH' and booking.paymentStatus.name() == 'PENDING'}"
                               class="text-muted">-</span>
                     </td>
